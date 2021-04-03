@@ -5,7 +5,7 @@ npm run merge || exit 1
 wc -l ./zbw_trfn_tester.abap
 
 # Deploy artifacts
-git clone https://github.com/pawelwiejkut/build.git ../build
+git clone https://github.com/pawelwiejkut/build.git 
 cp zbw_trfn_tester.abap ../build/zbw_trfn_tester.abap
 cd ../build
 
