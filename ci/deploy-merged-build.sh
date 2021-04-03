@@ -6,7 +6,7 @@ wc -l ./zbw_trfn_tester.abap
 
 # Deploy artifacts
 git clone https://github.com/pawelwiejkut/bw_trfn_tester.git
-cp zbw_trfn_tester.abap ../bw_trfn_tester/zbw_trfn_tester.abap
+cp zbw_trfn_tester.abap /bw_trfn_tester/zbw_trfn_tester.abap
 cd ../bw_trfn_tester
 
 # Commit
