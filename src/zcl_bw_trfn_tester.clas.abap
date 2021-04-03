@@ -22,7 +22,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
   METHOD constructor.
 
-    SELECT SINGLE @abap_true
+    SELECT SINGLE @abap_true  "#EC CI_SUBRC
     FROM rstran
     INTO @DATA(lv_trfn_exist)
     WHERE tranid = @pa_trfnid
