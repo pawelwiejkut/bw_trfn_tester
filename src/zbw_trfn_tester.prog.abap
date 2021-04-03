@@ -5,7 +5,7 @@
 *&---------------------------------------------------------------------*
 REPORT zbw_trfn_tester.
 
-PARAMETERS: pa_trfn TYPE string.
+PARAMETERS: pa_trfn TYPE rstranid.
 SELECTION-SCREEN SKIP.
 
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-001.
@@ -136,5 +136,10 @@ AT SELECTION-SCREEN OUTPUT.
 
   ENDLOOP.
 
-
 END-OF-SELECTION.
+
+  TRY.
+      DATA(lobj_trfn_tester) = NEW zcl_bw_trfn_tester( pa_trfnid = pa_trfn ).
+    CATCH zcx_bw_trfn_tester.
+      MESSAGE 'Tranformation do not exist or not active' TYPE 'I' DISPLAY LIKE 'E'.
+  ENDTRY.
