@@ -12,68 +12,110 @@
    </PROGDIR>
    <TPOOL>
     <item>
+     <ID>I</ID>
+     <KEY>001</KEY>
+     <ENTRY>Please select scenario</ENTRY>
+     <LENGTH>44</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>002</KEY>
+     <ENTRY>New solution test - chose data source</ENTRY>
+     <LENGTH>74</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>003</KEY>
+     <ENTRY>Create test data - source</ENTRY>
+     <LENGTH>26</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>004</KEY>
+     <ENTRY>New solution test - chose result to compare</ENTRY>
+     <LENGTH>86</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>005</KEY>
+     <ENTRY>Create test data - result</ENTRY>
+     <LENGTH>50</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>006</KEY>
+     <ENTRY>ABAP Class to compare - methods: end_routine, start_routine or expert_routine</ENTRY>
+     <LENGTH>132</LENGTH>
+    </item>
+    <item>
      <ID>R</ID>
      <ENTRY>Test BW transformation</ENTRY>
      <LENGTH>22</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PA_AMDP</KEY>
-     <ENTRY>AMDP ?</ENTRY>
-     <LENGTH>14</LENGTH>
-    </item>
-    <item>
-     <ID>S</ID>
-     <KEY>PA_MUL</KEY>
-     <ENTRY>Multiplication of data</ENTRY>
-     <LENGTH>30</LENGTH>
-    </item>
-    <item>
-     <ID>S</ID>
-     <KEY>PA_NCLS</KEY>
-     <ENTRY>New Class with code name</ENTRY>
+     <KEY>PA_CTRFN</KEY>
+     <ENTRY>ABAP Class with new TRFN</ENTRY>
      <LENGTH>32</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PA_OPRG</KEY>
-     <ENTRY>Old TRFN program ID</ENTRY>
-     <LENGTH>27</LENGTH>
-    </item>
-    <item>
-     <ID>S</ID>
-     <KEY>PA_PKGS</KEY>
-     <ENTRY>Package size</ENTRY>
-     <LENGTH>20</LENGTH>
-    </item>
-    <item>
-     <ID>S</ID>
-     <KEY>PA_PSA</KEY>
-     <ENTRY>PSA source table</ENTRY>
-     <LENGTH>24</LENGTH>
-    </item>
-    <item>
-     <ID>S</ID>
-     <KEY>PA_RTYP</KEY>
-     <ENTRY>Routine type</ENTRY>
-     <LENGTH>20</LENGTH>
-    </item>
-    <item>
-     <ID>S</ID>
-     <KEY>PA_UPTO</KEY>
-     <ENTRY>Up to rows</ENTRY>
-     <LENGTH>18</LENGTH>
-    </item>
-    <item>
-     <ID>S</ID>
-     <KEY>R_LCHEC</KEY>
-     <ENTRY>Calculation check</ENTRY>
+     <KEY>PA_NEW</KEY>
+     <ENTRY>Test new solution</ENTRY>
      <LENGTH>25</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>R_PCHEC</KEY>
-     <ENTRY>Performance check</ENTRY>
+     <KEY>PA_OVN</KEY>
+     <ENTRY>Compare solutions</ENTRY>
+     <LENGTH>25</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_PTE</KEY>
+     <ENTRY>Performance test</ENTRY>
+     <LENGTH>24</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_ROWND</KEY>
+     <ENTRY>Own result data</ENTRY>
+     <LENGTH>23</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_RTABL</KEY>
+     <ENTRY>DDIC Result table</ENTRY>
+     <LENGTH>25</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_RTABN</KEY>
+     <ENTRY>DDIC Result table</ENTRY>
+     <LENGTH>25</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_SOWND</KEY>
+     <ENTRY>Own test data</ENTRY>
+     <LENGTH>21</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_STABL</KEY>
+     <ENTRY>DDIC Source table</ENTRY>
+     <LENGTH>25</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_STABN</KEY>
+     <ENTRY>Table name</ENTRY>
+     <LENGTH>18</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_TRFN</KEY>
+     <ENTRY>Transformation ID</ENTRY>
      <LENGTH>25</LENGTH>
     </item>
    </TPOOL>
