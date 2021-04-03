@@ -1,5 +1,7 @@
 # BW Transformation Tester - BETA
 
+[![YourActionName Actions Status](https://github.com/pawelwiejkut/bw_trfn_tester/workflows/CI/badge.svg)](https://github.com/pawelwiejkut/bw_trfn_tester/actions)
+
 Warning:
 This tool is currently under development, you are using this on your own risk :)
 
