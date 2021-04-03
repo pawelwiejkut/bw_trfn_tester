@@ -17,6 +17,8 @@ jobs:
       run: |
         npm install
         npm run abaplint
+        npm run merge
+        npm run merge.ci
         
         jobs:
   lint:
