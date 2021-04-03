@@ -16,5 +16,4 @@ jobs:
     - name: Run npm steps
       run: |
         npm install
-        npm run eslint
         npm run abaplint
