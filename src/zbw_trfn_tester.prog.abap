@@ -143,3 +143,11 @@ END-OF-SELECTION.
     CATCH zcx_bw_trfn_tester.
       MESSAGE 'Tranformation do not exist or not active' TYPE 'I' DISPLAY LIKE 'E'.
   ENDTRY.
+
+  if pa_stabn is NOT INITIAL.
+
+  ENDIF.
+
+  if pa_rtabl is NOT INITIAL.
+
+  ENDIF.
