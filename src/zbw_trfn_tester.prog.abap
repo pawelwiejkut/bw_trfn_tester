@@ -91,47 +91,47 @@ AT SELECTION-SCREEN OUTPUT.
       MODIFY SCREEN.
     ENDIF.
 
-  IF pa_stabl = abap_true.
+    IF pa_stabl = abap_true.
 
-    IF screen-group1 = 'G12'.
-      screen-active = '1'.
-    ELSEIF screen-group1 = 'G13'.
-      screen-active = '0'.
+      IF screen-group1 = 'G12'.
+        screen-active = '1'.
+      ELSEIF screen-group1 = 'G13'.
+        screen-active = '0'.
+      ENDIF.
+
+      MODIFY SCREEN.
+    ENDIF.
+    IF pa_sownd = abap_true.
+
+      IF screen-group1 = 'G13'.
+        screen-active = '1'.
+      ELSEIF screen-group1 = 'G12'.
+        screen-active = '0'.
+      ENDIF.
+
+      MODIFY SCREEN.
     ENDIF.
 
-    MODIFY SCREEN.
-  ENDIF.
-  IF pa_sownd = abap_true.
+    IF pa_rtabl = abap_true.
 
-    IF screen-group1 = 'G13'.
-      screen-active = '1'.
-    ELSEIF screen-group1 = 'G12'.
-      screen-active = '0'.
+      IF screen-group1 = 'G14'.
+        screen-active = '1'.
+      ELSEIF screen-group1 = 'G15'.
+        screen-active = '0'.
+      ENDIF.
+
+      MODIFY SCREEN.
     ENDIF.
 
-    MODIFY SCREEN.
-  ENDIF.
+    IF pa_rownd = abap_true.
 
-  IF pa_rtabl = abap_true.
+      IF screen-group1 = 'G15'.
+        screen-active = '1'.
+      ELSEIF screen-group1 = 'G14'.
+        screen-active = '0'.
+      ENDIF.
 
-    IF screen-group1 = 'G14'.
-      screen-active = '1'.
-    ELSEIF screen-group1 = 'G15'.
-      screen-active = '0'.
+      MODIFY SCREEN.
     ENDIF.
 
-    MODIFY SCREEN.
-  ENDIF.
-
-  IF pa_rownd = abap_true.
-
-    IF screen-group1 = 'G15'.
-      screen-active = '1'.
-    ELSEIF screen-group1 = 'G14'.
-      screen-active = '0'.
-    ENDIF.
-
-    MODIFY SCREEN.
-  ENDIF.
-
-ENDLOOP.
+  ENDLOOP.

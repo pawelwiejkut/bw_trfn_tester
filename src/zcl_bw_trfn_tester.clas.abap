@@ -12,5 +12,4 @@ ENDCLASS.
 CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
 
-
 ENDCLASS.
