@@ -10,6 +10,6 @@ This development can be used to test your transformation code in following scena
 2.  Test old vs new solution (new one included into class),
 3.  Performance tests old vs new.
 
-TO-DO:
--Support of compare to old version,
+TO-DO:<br />
+-Support of compare to old version,<br />
 -Supporting multi-transformation flows (like including Infosource).
