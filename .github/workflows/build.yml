@@ -17,6 +17,4 @@ jobs:
       run: |
         npm install
         npm run eslint
-        npm run abaplint      
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        npm run abaplint
