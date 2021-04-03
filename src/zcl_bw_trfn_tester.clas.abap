@@ -130,7 +130,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
     SELECT *             ##SUBRC_OK
     FROM (iv_table_name)
-    INTO TABLE et_table.
+    INTO TABLE @et_table.
 
   ENDMETHOD.
 

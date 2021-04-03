@@ -147,9 +147,10 @@ END-OF-SELECTION.
   IF pa_new = abap_true.
 
     lobj_trfn_tester->test_new_scenario(
-      EXPORTING
-        iv_source_ddic_table = conv #( pa_stabn )
-        iv_result_ddic_table = conv #( pa_rtabn )
+        iv_source_ddic_table = CONV #( pa_stabn )
+        iv_result_ddic_table = CONV #( pa_rtabn )
     ).
 
   ENDIF.
+
+  CHECK pa_ctrfn IS INITIAL.
