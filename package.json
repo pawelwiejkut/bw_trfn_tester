@@ -2,8 +2,8 @@
   "license": "MIT",
   "scripts": {
     "test": "npm run abaplint",
-    "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone > zabapgit.abap",
-    "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint && cd ..",
+    "merge": "abapmerge -f src/zbw_trfn_tester.prog.abap -c zbw_trfn_tester_standalone > zbw_trfn_tester.abap",
+    "merge.ci": "cp zbw_trfn_tester.abap ci/zbw_trfn_tester.prog.abap && cd ci && abaplint && cd ..",
     "unit": "rm -rf output && abap_transpile && echo RUNNING && node output/index.js",
     "abaplint": "abaplint",
     "docker-build": "docker-compose -f test/docker-compose.yml build",
