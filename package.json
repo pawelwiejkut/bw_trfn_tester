@@ -1,10 +1,9 @@
 {
   "license": "MIT",
   "scripts": {
-    "test": "npm run eslint && npm run abaplint",
+    "test": "npm run abaplint",
     "unit": "rm -rf output && abap_transpile && echo RUNNING && node output/index.js",
-    "abaplint": "abaplint",
-    "eslint": "eslint src"
+    "abaplint": "abaplint"
   },
   "repository": {
     "type": "git",
