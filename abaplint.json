@@ -109,13 +109,8 @@
         "local_testclass_location": true,
         "main_file_contents": true,
         "rfc_error_handling": true,
-        "indentation": {
-            "alignTryCatch": false,
-            "ignoreExceptions": false,
-            "globalClassSkipFirst": false,
-            "ignoreGlobalClassDefinition": false,
-            "ignoreGlobalInterface": false
-        },
+        "indentation": false,
+        
         "sequential_blank": {
             "lines": 3
         },
