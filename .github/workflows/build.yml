@@ -22,7 +22,7 @@ jobs:
     - name: deploy-merged-build
       if: github.ref == 'refs/heads/main' && github.repository == 'pawelwiejkut/bw_trfn_tester'
       env:
-        GITHUB_API_KEY: ${{ secrets.wrokflow }}
+        GITHUB_API_KEY: ${{ secrets.MY_SECRET }}
       run: | 
        chmod +x ./ci/deploy-merged-build.sh
        ./ci/deploy-merged-build.sh
