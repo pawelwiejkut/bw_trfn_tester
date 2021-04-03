@@ -3,6 +3,16 @@ name: CI
 on: [push, pull_request]
 
 jobs:
+  abaplint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: abaplint
+      uses: abaplint/actions-abaplint@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
   build:
     runs-on: ubuntu-latest
     steps:
@@ -16,7 +26,7 @@ jobs:
     - name: Run npm steps
       run: |
         npm install
-
+        npm run abaplint
         npm run merge
         npm run merge.ci
     - name: deploy-merged-build
