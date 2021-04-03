@@ -26,15 +26,3 @@ jobs:
       run: | 
        chmod +x ./ci/deploy-merged-build.sh
        ./ci/deploy-merged-build.sh
-    - name: deploy-release-tag
-      if: github.ref == 'refs/heads/main' && github.repository == 'pawelwiejkut/bw_trfn_tester'
-      env:
-        GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
-      run: ./ci/deploy-release-tag.sh
-    - name: Upload build artifact
-      if: always()
-      uses: actions/upload-artifact@main
-      with:
-        name: zabapgit_standalone.abap
-        path: ./zabapgit.abap
-        retention-days: 7
