@@ -23,7 +23,9 @@ jobs:
       if: github.ref == 'refs/heads/main' && github.repository == 'pawelwiejkut/bw_trfn_tester'
       env:
         GITHUB_API_KEY: ${{ secrets.MY_TOKEN }}
-      run: ./ci/deploy-merged-build.sh
+      run: | 
+       chmod +x ./ci/deploy-merged-build.sh
+       ./ci/deploy-merged-build.sh
     - name: deploy-release-tag
       if: github.ref == 'refs/heads/main' && github.repository == 'pawelwiejkut/bw_trfn_tester'
       env:
