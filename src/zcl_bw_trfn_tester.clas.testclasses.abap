@@ -21,7 +21,6 @@ CLASS ltcl_ IMPLEMENTATION.
     DATA(lv_rec_progid) = gobj_test->caluclate_program_id( ).
 
     CL_ABAP_UNIT_ASSERT=>assert_equals(
-      EXPORTING
         act                  = lv_programid
         exp                  = lv_rec_progid ).
 

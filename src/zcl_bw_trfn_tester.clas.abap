@@ -20,11 +20,22 @@ CLASS zcl_bw_trfn_tester DEFINITION
 
     "! <p class="shorttext synchronized" lang="en"></p>
     "! Test new scenario - input->calculation->compare result with provided result data
-    "! @parameter it_source_table | <p class="shorttext synchronized" lang="en">Source table to compare</p>
-    "! @parameter it_result_table | <p class="shorttext synchronized" lang="en">Result table to compare</p>
+    "! @parameter ir_source_user_table | <p class="shorttext synchronized" lang="en">Source table to compare</p>
+    "! @parameter ir_result_user_table | <p class="shorttext synchronized" lang="en">Result table to compare</p>
     METHODS test_new_scenario
-      IMPORTING it_source_table TYPE ANY TABLE
-                it_result_table TYPE ANY TABLE.
+      IMPORTING iv_source_ddic_table TYPE string OPTIONAL
+                iv_result_ddic_table TYPE string OPTIONAL
+                ir_source_user_table TYPE REF TO data
+                ir_result_user_table TYPE ref to data.
+
+
+    "! <p class="shorttext synchronized" lang="en"></p>
+    "! Get data from DDIC table name
+    "! @parameter iv_table_name | <p class="shorttext synchronized" lang="en">DDIC Table name</p>
+    "! @parameter et_table | <p class="shorttext synchronized" lang="en">Table data</p>
+    METHODS get_data_from_table
+      IMPORTING iv_table_name TYPE string
+      EXPORTING et_table      TYPE ANY TABLE.
 
   PROTECTED SECTION.
 
@@ -68,9 +79,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
       CATCH cx_rstran_error_with_message.
     ENDTRY.
 
-    lobj_rstran_miantain->get_progid(
-     IMPORTING
-        e_progid = DATA(lv_progid) ).
+    lobj_rstran_miantain->get_progid( IMPORTING e_progid = DATA(lv_progid) ).
 
     rv_progid = |GP{ lv_progid }|.
 
@@ -78,7 +87,48 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
   METHOD test_new_scenario.
 
+    DATA: lr_source_table TYPE REF TO data,
+          lr_result_table TYPE REF TO data.
 
+    FIELD-SYMBOLS: <lt_source_table> TYPE STANDARD TABLE,
+                   <lt_result_table> TYPE STANDARD TABLE.
+
+    IF iv_source_ddic_table IS NOT INITIAL.
+
+      CREATE DATA lr_source_table TYPE STANDARD TABLE OF (iv_source_ddic_table).
+      ASSIGN lr_source_table->* TO <lt_source_table>.
+
+      get_data_from_table(
+         EXPORTING
+          iv_table_name = iv_source_ddic_table
+         IMPORTING
+          et_table      = <lt_source_table>
+      ).
+
+    ENDIF.
+
+    IF iv_result_ddic_table IS NOT INITIAL.
+
+      CREATE DATA lr_result_table TYPE STANDARD TABLE OF (iv_result_ddic_table).
+      ASSIGN lr_result_table->* TO <lt_result_table>.
+
+      get_data_from_table(
+        EXPORTING
+          iv_table_name = iv_result_ddic_table
+        IMPORTING
+          et_table      = <lt_result_table>
+      ).
+
+    ENDIF.
+
+
+  ENDMETHOD.
+
+  METHOD get_data_from_table.
+
+    SELECT *
+    FROM (iv_table_name)
+    INTO TABLE et_table.
 
   ENDMETHOD.
 
