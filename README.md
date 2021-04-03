@@ -1,5 +1,9 @@
-# BW Transformation Tester
+# BW Transformation Tester - BETA
 
+Warning:
+This tool is currently under development, you are using this on your own risk :)
+
+Purpose:
 This development can be used to test your transformation code in following scenarios:
 
 1.  Test new solution and compare to provided result,
@@ -7,4 +11,5 @@ This development can be used to test your transformation code in following scena
 3.  Performance tests old vs new.
 
 TO-DO:
+-Support of compare to old version,
 -Supporting multi-transformation flows (like including Infosource).
