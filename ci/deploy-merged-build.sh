@@ -15,5 +15,4 @@ git config user.email "ci@pawelwiejkut.net"
 git config user.name "CI"
 git add zbw_trfn_tester.abap
 git commit -m "CI build " || exit 1
-cat $GITHUB_API_KEY
 git push -q https://$GITHUB_API_KEY@github.com/pawelwiejkut/bw_trfn_tester.git 
