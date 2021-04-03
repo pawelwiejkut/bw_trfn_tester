@@ -1,6 +1,6 @@
 # BW Transformation Tester - BETA
 
-[![CI](https://github.com/pawelwiejkut/bw_trfn_tester/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/pawelwiejkut/bw_trfn_tester/actions/workflows/build.yml)<br />
+[![CI](https://github.com/pawelwiejkut/bw_trfn_tester/workflows/CI/badge.svg)](https://github.com/pawelwiejkut/bw_trfn_tester/actions)
 
 Warning:
 This tool is currently under development, you are using this on your own risk :)
