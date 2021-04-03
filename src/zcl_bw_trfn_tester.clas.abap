@@ -25,8 +25,8 @@ CLASS zcl_bw_trfn_tester DEFINITION
     METHODS test_new_scenario
       IMPORTING iv_source_ddic_table TYPE string OPTIONAL
                 iv_result_ddic_table TYPE string OPTIONAL
-                ir_source_user_table TYPE REF TO data
-                ir_result_user_table TYPE ref to data.
+                ir_source_user_table TYPE REF TO data OPTIONAL
+                ir_result_user_table TYPE REF TO data OPTIONAL.
 
 
     "! <p class="shorttext synchronized" lang="en"></p>
@@ -50,7 +50,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
   METHOD constructor.
 
-    SELECT SINGLE @abap_true                              "#EC CI_SUBRC
+    SELECT SINGLE @abap_true    ##SUBRC_OK
     FROM rstran
     INTO @DATA(lv_trfn_exist)
     WHERE tranid = @pa_trfnid
@@ -74,7 +74,6 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
       CATCH cx_rstran_input_invalid.
       CATCH cx_rstran_cancelled.
       CATCH cx_rstran_not_authorized.
-      CATCH cx_rstran_display_only.
       CATCH cx_rstran_already_exist.
       CATCH cx_rstran_error_with_message.
     ENDTRY.
@@ -98,12 +97,14 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
       CREATE DATA lr_source_table TYPE STANDARD TABLE OF (iv_source_ddic_table).
       ASSIGN lr_source_table->* TO <lt_source_table>.
 
-      get_data_from_table(
-         EXPORTING
-          iv_table_name = iv_source_ddic_table
-         IMPORTING
-          et_table      = <lt_source_table>
-      ).
+      IF sy-subrc = 0.
+        get_data_from_table(
+           EXPORTING
+            iv_table_name = iv_source_ddic_table
+           IMPORTING
+            et_table      = <lt_source_table>
+        ).
+      ENDIF.
 
     ENDIF.
 
@@ -111,13 +112,14 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
       CREATE DATA lr_result_table TYPE STANDARD TABLE OF (iv_result_ddic_table).
       ASSIGN lr_result_table->* TO <lt_result_table>.
-
-      get_data_from_table(
-        EXPORTING
-          iv_table_name = iv_result_ddic_table
-        IMPORTING
-          et_table      = <lt_result_table>
-      ).
+      IF sy-subrc = 0.
+        get_data_from_table(
+          EXPORTING
+            iv_table_name = iv_result_ddic_table
+          IMPORTING
+            et_table      = <lt_result_table>
+        ).
+      ENDIF.
 
     ENDIF.
 
@@ -126,7 +128,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
   METHOD get_data_from_table.
 
-    SELECT *
+    SELECT *             ##SUBRC_OK
     FROM (iv_table_name)
     INTO TABLE et_table.
 

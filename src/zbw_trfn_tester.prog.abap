@@ -5,9 +5,6 @@
 *&---------------------------------------------------------------------*
 REPORT zbw_trfn_tester.
 
-FIELD-SYMBOLS: <lt_stable> TYPE ANY TABLE,
-               <lt_rtable> TYPE ANY TABLE.
-
 PARAMETERS: pa_trfn TYPE rstranid.
 SELECTION-SCREEN SKIP.
 
@@ -153,8 +150,6 @@ END-OF-SELECTION.
       EXPORTING
         iv_source_ddic_table = conv #( pa_stabn )
         iv_result_ddic_table = conv #( pa_rtabn )
-        it_source_user_table = <lt_stable>
-        it_result_user_table = <lt_rtable>
     ).
 
   ENDIF.
