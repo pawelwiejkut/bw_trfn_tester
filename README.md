@@ -17,7 +17,9 @@ This development can be used to test your transformation code in following scena
 -Supporting multi-transformation flows (like including Infosource).
 
 ## How to install
-Clone this repository using [ABAP Git](https://github.com/larshp/abapGit)
+You have 2 ways:
+1. Copy full program from [latest_build folder](https://raw.githubusercontent.com/pawelwiejkut/bw_trfn_tester/main/last_build/zbw_trfn_tester.abap)
+2. Clone this repository using [ABAP Git](https://github.com/larshp/abapGit)
 
 ## How to contribute ?
 
