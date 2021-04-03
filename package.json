@@ -4,7 +4,7 @@
     "test": "npm run eslint && npm run abaplint",
     "unit": "rm -rf output && abap_transpile && echo RUNNING && node output/index.js",
     "abaplint": "abaplint",
-    "eslint": "eslint src",
+    "eslint": "eslint src"
   },
   "repository": {
     "type": "git",
