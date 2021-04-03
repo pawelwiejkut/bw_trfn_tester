@@ -13,6 +13,6 @@ cd bw_trfn_tester
 git status
 git config user.email "ci@pawelwiejkut.net"
 git config user.name "CI"
-git add zbw_trfn_tester.abap
+git add last_build/zbw_trfn_tester.abap
 git commit -m "CI build " || exit 1
 git push -q https://$GITHUB_API_KEY@github.com/pawelwiejkut/bw_trfn_tester.git 
