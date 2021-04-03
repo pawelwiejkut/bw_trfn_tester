@@ -13,8 +13,6 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-    - name: abaplint
-      uses: abaplint/actions-abaplint@master
     - name: Run npm steps
       run: |
         npm install
