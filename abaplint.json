@@ -1,6 +1,7 @@
 {
     "global": {
         "files": "/src/**/*.*",
+        "exclude": ["src/zbw_trfn_tester_old.prog.abap"]
         "skipGeneratedGatewayClasses": true,
         "skipGeneratedPersistentClasses": true,
         "skipGeneratedFunctionGroups": true
