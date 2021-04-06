@@ -157,7 +157,7 @@
         "use_line_exists": true,
         "check_subrc": true,
         "cyclomatic_complexity": {
-            "max": 6
+            "max": 10
         },
         "parser_missing_space": true,
         "identical_conditions": true,
