@@ -137,6 +137,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
       CATCH cx_rstran_cancelled.
       CATCH cx_rstran_not_authorized.
       CATCH cx_rstran_already_exist.
+      CATCH cx_rstran_display_only.
       CATCH cx_rstran_error_with_message.
     ENDTRY.
 
@@ -572,6 +573,6 @@ END-OF-SELECTION.
 
 ****************************************************
 INTERFACE lif_abapmerge_marker.
-* abapmerge 0.14.3 - 2021-04-06T20:13:48.502Z
+* abapmerge 0.14.3 - 2021-04-06T20:51:32.666Z
 ENDINTERFACE.
 ****************************************************
