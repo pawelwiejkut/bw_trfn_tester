@@ -125,6 +125,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
       CATCH cx_rstran_cancelled.
       CATCH cx_rstran_not_authorized.
       CATCH cx_rstran_already_exist.
+      CATCH cx_rstran_display_only.
       CATCH cx_rstran_error_with_message.
     ENDTRY.
 
