@@ -9,7 +9,8 @@ CLASS zcl_bw_trfn_tester DEFINITION
     "! @parameter pa_trfnid | <p class="shorttext synchronized" lang="en">Transformation ID</p>
     "! @raising zcx_bw_trfn_tester | <p class="shorttext synchronized" lang="en">Invalid TRFN ID</p>
     METHODS constructor
-      IMPORTING pa_trfnid TYPE rstranid
+      IMPORTING iv_strfn TYPE sobj_name
+                iv_ttrfn TYPE sobj_name
       RAISING   zcx_bw_trfn_tester.
 
     "! <p class="shorttext synchronized" lang="en"></p>
@@ -37,9 +38,44 @@ CLASS zcl_bw_trfn_tester DEFINITION
       IMPORTING iv_table_name TYPE string
       EXPORTING et_table      TYPE ANY TABLE.
 
+    "! <p class="shorttext synchronized" lang="en"></p>
+    "!
+    "! @parameter rr_log | <p class="shorttext synchronized" lang="en">Log reference</p>
+    METHODS create_log
+      RETURNING VALUE(rr_log) TYPE REF TO cl_rsbm_log_cursor_step_dtp.
+
+    "! <p class="shorttext synchronized" lang="en"></p>
+    "!
+    "! @parameter iv_source_ddic_table | <p class="shorttext synchronized" lang="en">DDIC source table name</p>
+    "! @parameter iv_result_ddic_table | <p class="shorttext synchronized" lang="en">DDIC result table name</p>
+    "! @parameter er_src_str_trfn | <p class="shorttext synchronized" lang="en">Source TRFN structure</p>
+    "! @parameter er_res_str_trfn | <p class="shorttext synchronized" lang="en">Result TRFN structure</p>
+    "! @parameter er_src_tab_trfn | <p class="shorttext synchronized" lang="en">Source TRFN table</p>
+    "! @parameter er_source_table | <p class="shorttext synchronized" lang="en">User source table</p>
+    "! @parameter er_result_table | <p class="shorttext synchronized" lang="en">User result table to compare</p>
+    METHODS create_data_references
+      IMPORTING iv_source_ddic_table TYPE string
+                iv_result_ddic_table TYPE string
+      EXPORTING er_src_str_trfn      TYPE REF TO data
+                er_res_str_trfn      TYPE REF TO data
+                er_src_tab_trfn      TYPE REF TO data
+                er_source_table      TYPE REF TO data
+                er_result_table      TYPE REF TO data.
+
+    "! <p class="shorttext synchronized" lang="en"></p>
+    "!
+    "! @parameter ir_trfn_result | <p class="shorttext synchronized" lang="en">TRFN result data</p>
+    "! @parameter ir_user_result | <p class="shorttext synchronized" lang="en">User result data</p>
+    "! @parameter iv_user_table_name | <p class="shorttext synchronized" lang="en">User result DDIC table name</p>
+    METHODS compare_trfn_to_user_table
+      IMPORTING ir_trfn_result     TYPE REF TO data
+                ir_user_result     TYPE REF TO data
+                iv_user_table_name TYPE string.
+
   PROTECTED SECTION.
 
-    DATA: gv_trfnid TYPE rstranid.
+    DATA: gv_trfnid TYPE rstranid,
+          gv_dtp    TYPE rsbkdtpnm.
 
   PRIVATE SECTION.
 ENDCLASS.
@@ -50,18 +86,32 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
   METHOD constructor.
 
-    SELECT SINGLE @abap_true    ##SUBRC_OK
+    SELECT SINGLE tranid
     FROM rstran
-    INTO @DATA(lv_trfn_exist)
-    WHERE tranid = @pa_trfnid
+    INTO @DATA(lv_trfn_id)
+    WHERE sourcename = @iv_strfn
+    AND targetname = @iv_ttrfn
     AND objvers = 'A'
     AND objstat = 'ACT'.
 
-    IF lv_trfn_exist = abap_true.
-      gv_trfnid = pa_trfnid.
+    IF sy-subrc = 0.
+      gv_trfnid = lv_trfn_id.
     ELSE.
       RAISE EXCEPTION TYPE zcx_bw_trfn_tester.
     ENDIF.
+
+    SELECT SINGLE dtp
+    FROM rsbkdtp
+    WHERE src = @iv_strfn
+    AND tgt = @iv_ttrfn
+    INTO @DATA(lv_dtp).
+
+    IF sy-subrc = 0.
+      gv_dtp = lv_dtp.
+    ELSE.
+      RAISE EXCEPTION TYPE zcx_bw_trfn_tester.
+    ENDIF.
+
 
   ENDMETHOD.
 
@@ -86,17 +136,27 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
   METHOD test_new_scenario.
 
-    DATA: lr_source_table TYPE REF TO data,
-          lr_result_table TYPE REF TO data.
+    DATA: lobj_trfn_prog  TYPE REF TO object.
 
     FIELD-SYMBOLS: <lt_source_table> TYPE STANDARD TABLE,
-                   <lt_result_table> TYPE STANDARD TABLE.
+                   <ls_trfn_source>  TYPE any,
+                   <lt_trfn_source>  TYPE STANDARD TABLE,
+                   <ls_trfn_result>  TYPE any.
+
+    create_data_references(
+      EXPORTING
+        iv_source_ddic_table = iv_source_ddic_table
+        iv_result_ddic_table = iv_result_ddic_table
+      IMPORTING
+        er_src_str_trfn      = DATA(lr_src_str_trfn)
+        er_res_str_trfn      = DATA(lr_res_str_trfn)
+        er_src_tab_trfn      = DATA(lr_src_tab_trfn)
+        er_source_table      = DATA(lr_source_table)
+        er_result_table      = DATA(lr_result_table)
+    ).
 
     IF iv_source_ddic_table IS NOT INITIAL.
-
-      CREATE DATA lr_source_table TYPE STANDARD TABLE OF (iv_source_ddic_table).
       ASSIGN lr_source_table->* TO <lt_source_table>.
-
       IF sy-subrc = 0.
         get_data_from_table(
            EXPORTING
@@ -105,24 +165,65 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
             et_table      = <lt_source_table>
         ).
       ENDIF.
-
     ENDIF.
 
-    IF iv_result_ddic_table IS NOT INITIAL.
-
-      CREATE DATA lr_result_table TYPE STANDARD TABLE OF (iv_result_ddic_table).
-      ASSIGN lr_result_table->* TO <lt_result_table>.
-      IF sy-subrc = 0.
-        get_data_from_table(
-          EXPORTING
-            iv_table_name = iv_result_ddic_table
-          IMPORTING
-            et_table      = <lt_result_table>
-        ).
-      ENDIF.
-
+    ASSIGN lr_src_str_trfn->* TO <ls_trfn_source>.
+    IF sy-subrc <> 0.
+      MESSAGE 'Error during assign' TYPE 'E'.
     ENDIF.
 
+    ASSIGN lr_res_str_trfn->* TO <ls_trfn_result>.
+    IF sy-subrc <> 0.
+      MESSAGE 'Error during assign' TYPE 'E'.
+    ENDIF.
+
+    ASSIGN lr_src_tab_trfn->* TO <lt_trfn_source>.
+    IF sy-subrc <> 0.
+      MESSAGE 'Error during assign' TYPE 'E'.
+    ENDIF.
+
+    <lt_trfn_source> = CORRESPONDING #( <lt_source_table> ).
+
+    DATA(lro_inbound)  = NEW cl_rsbk_data( ).
+    DATA(lro_outbound) = NEW cl_rsbk_data( ).
+
+    lro_inbound->add_segment_from_reference(
+      EXPORTING
+        i_r_s_data  = lr_src_str_trfn
+      RECEIVING
+        r_r_segment = DATA(lro_segment_inbound)
+    ).
+
+    lro_outbound->add_segment_from_reference( i_r_s_data  = lr_res_str_trfn ).
+
+    lro_segment_inbound->insert_table( i_r_t_data = lr_src_tab_trfn ).
+
+    DATA(lro_log) = create_log( ).
+    DATA(lv_program_id) = caluclate_program_id( ).
+
+    CONCATENATE '\PROGRAM=' lv_program_id '\CLASS=LCL_TRANSFORM' INTO DATA(lv_trfn_prog).
+    CREATE OBJECT lobj_trfn_prog TYPE (lv_trfn_prog).
+
+    CALL METHOD lobj_trfn_prog->('EXECUTE')
+      EXPORTING
+        i_master_data_exist = ''
+        i_r_inbound         = lro_inbound
+        i_r_log             = lro_log
+*       i_r_request         = l_r_request
+*       i_r_trfn_cmd        = me
+      IMPORTING
+        e_r_outbound        = lro_outbound.
+    TRY.
+        DATA(lro_segment_outbound) = lro_outbound->get_segment( i_segid = 001 ).
+      CATCH cx_rs_not_found.
+        MESSAGE 'Outbound segment do not exist' TYPE 'E'.
+    ENDTRY.
+
+    compare_trfn_to_user_table(
+        ir_trfn_result = lro_segment_outbound->get_data(  )
+        ir_user_result = lr_result_table
+        iv_user_table_name = iv_result_ddic_table
+    ).
 
   ENDMETHOD.
 
@@ -130,7 +231,180 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
     SELECT *             ##SUBRC_OK
     FROM (iv_table_name)
-    INTO TABLE @et_table.
+    INTO TABLE @et_table
+    UP TO 50000 ROWS.
+
+  ENDMETHOD.
+
+  METHOD create_log.
+
+    DATA: lobj_dtp TYPE REF TO cl_rsbk_dtp.
+
+    DATA(lro_dp_log) = NEW cl_rsbm_log_dtp_dp(
+       i_requid    = ''
+       i_datapakid = 1
+       i_no_db     =  ''
+       i_runid     =  1
+     ).
+
+    lobj_dtp = cl_rsbk_dtp=>factory( gv_dtp ).
+
+    TRY.
+        lobj_dtp->if_rsbk_dtp_maintain~set_simulation( i_simulation = abap_true ).
+      CATCH cx_rs_failed.
+        MESSAGE 'Set DTP to simmulation mode failed' TYPE 'E'.
+    ENDTRY.
+
+    TRY.
+        DATA(lr_request) = lobj_dtp->create_request( ).
+      CATCH cx_rs_not_found.
+        MESSAGE 'Request not found' TYPE 'E'.
+      CATCH cx_rs_foreign_lock.
+        MESSAGE 'Foregin lock' TYPE 'E'.
+      CATCH cx_rs_failed.
+        MESSAGE 'Create request failed' TYPE 'E'.
+    ENDTRY.
+
+    TRY.
+        lro_dp_log->create_dp(
+          EXPORTING
+            i_r_request = lr_request
+            i_datapakid = 1
+            i_runid     = 1
+            i_no_db     = abap_true
+          RECEIVING
+            r_ref_dplog = lro_dp_log
+        ).
+      CATCH cx_rs_existing.
+        MESSAGE 'Data package exists' TYPE 'E'.
+      CATCH cx_rs_para_not_exist.
+        MESSAGE 'Parameter do not exist' TYPE 'E'.
+      CATCH cx_rs_foreign_lock.
+        MESSAGE 'Foregin lock' TYPE 'E'.
+    ENDTRY.
+
+    TRY.
+        cl_rsbm_error_handler=>factory(
+          EXPORTING
+            i_request        = lr_request->get_requid( )
+            i_no_monitor     = lr_request->get_no_monitor( )
+            i_errorhandling  = lr_request->get_errorhandling( )
+            i_number_at_err  = lr_request->get_number_at_err( )
+            i_t_step         = lr_request->get_t_stepid( )
+          RECEIVING
+            r_r_errorhandler = DATA(lr_error_hanlder)
+        ).
+      CATCH cx_rs_access_error.
+        MESSAGE 'Access error during error handler factory' TYPE 'E'.
+    ENDTRY.
+
+    rr_log = NEW cl_rsbm_log_cursor_step_dtp(
+      i_r_errorlog = lr_error_hanlder
+      i_stepid     = '2-'
+      i_r_dp_log   = lro_dp_log
+      i_requid     =  '3'
+    ).
+
+  ENDMETHOD.
+
+  METHOD create_data_references.
+
+    DATA(lv_programid) = caluclate_program_id( ).
+
+    CONCATENATE '\PROGRAM=' lv_programid '\CLASS=LCL_TRANSFORM\TYPE=_TY_S_SC_1' INTO DATA(lv_src_trfn_str_type).
+    CONCATENATE '\PROGRAM=' lv_programid '\CLASS=LCL_TRANSFORM\TYPE=_TY_S_TG_1' INTO DATA(lv_res_trfn_str_type).
+    CONCATENATE '\PROGRAM=' lv_programid '\CLASS=LCL_TRANSFORM\TYPE=_TY_T_SC_1' INTO DATA(lv_src_trfn_tab_type).
+
+    CREATE DATA er_src_str_trfn TYPE (lv_src_trfn_str_type).
+    CREATE DATA er_res_str_trfn TYPE (lv_res_trfn_str_type).
+    CREATE DATA er_src_tab_trfn TYPE (lv_src_trfn_tab_type).
+
+    IF iv_source_ddic_table IS NOT INITIAL.
+      CREATE DATA er_source_table TYPE STANDARD TABLE OF (iv_source_ddic_table).
+    ENDIF.
+    IF iv_result_ddic_table IS NOT INITIAL.
+      CREATE DATA er_result_table TYPE STANDARD TABLE OF (iv_result_ddic_table).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD compare_trfn_to_user_table.
+
+    DATA: lv_where           TYPE string,
+          lv_no_changes      TYPE flag,
+          lr_new_str_to_trfn TYPE REF TO data,
+          lr_table_new       TYPE REF TO data.
+
+    FIELD-SYMBOLS: <lt_user_result>     TYPE STANDARD TABLE,
+                   <lt_new_str_to_trfn> TYPE STANDARD TABLE,
+                   <lt_trfn_result>     TYPE STANDARD TABLE,
+                   <lt_table_new>       TYPE STANDARD TABLE.
+
+    CREATE DATA lr_new_str_to_trfn TYPE STANDARD TABLE OF (iv_user_table_name).
+    ASSIGN lr_new_str_to_trfn->* TO <lt_new_str_to_trfn>.
+    IF sy-subrc <> 0.
+      MESSAGE 'Error during assign' TYPE 'E'.
+    ENDIF.
+
+    ASSIGN ir_user_result->* TO <lt_user_result>.
+    IF sy-subrc <> 0.
+      MESSAGE 'Error during assign' TYPE 'E'.
+    ENDIF.
+
+    ASSIGN ir_trfn_result->* TO <lt_trfn_result>.
+    IF sy-subrc <> 0.
+      MESSAGE 'Error during assign' TYPE 'E'.
+    ENDIF.
+
+    MOVE-CORRESPONDING <lt_trfn_result> TO <lt_new_str_to_trfn>.
+
+    SELECT fieldname, keyflag
+    FROM dd03l
+    INTO TABLE @DATA(lt_dd03l)
+    WHERE tabname = @iv_user_table_name.
+
+    IF sy-subrc <> 0.
+      MESSAGE 'No fields found for result table' TYPE 'E'.
+    ENDIF.
+
+    LOOP AT lt_dd03l REFERENCE INTO DATA(lr_dd03l) WHERE keyflag = abap_true.
+
+      IF lv_where IS INITIAL.
+        lv_where = |{ lr_dd03l->fieldname } = @<lt_trfn_result>-{  lr_dd03l->fieldname } |.
+      ELSE.
+        lv_where = |{ lv_where } and { lr_dd03l->fieldname } = @<lt_trfn_result>-{ lr_dd03l->fieldname }|.
+      ENDIF.
+
+    ENDLOOP.
+
+    SELECT * FROM
+    (iv_user_table_name)
+    FOR ALL ENTRIES IN @<lt_trfn_result>
+    WHERE (lv_where)
+    INTO TABLE @<lt_user_result>.
+
+    IF sy-subrc <> 0.
+      MESSAGE 'Error during result data select' TYPE 'E'.
+    ENDIF.
+
+    SORT <lt_user_result>.
+    SORT <lt_new_str_to_trfn>.
+
+    CALL FUNCTION 'CTVB_COMPARE_TABLES_3'
+      EXPORTING
+        it_table_old  = <lt_user_result>
+        it_table_new  = <lt_new_str_to_trfn>
+        iv_key_count  = lines( lt_dd03l )
+*       iv_key_table  =
+      IMPORTING
+*       et_table_del  =
+*       et_table_add  =
+*       et_table_mod  =
+        ev_no_changes = lv_no_changes.
+
+    IF lv_no_changes = abap_true.
+      MESSAGE 'Result is compatible with table data' TYPE 'S'.
+    ENDIF.
 
   ENDMETHOD.
 

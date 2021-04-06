@@ -114,9 +114,15 @@
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PA_TRFN</KEY>
-     <ENTRY>Transformation ID</ENTRY>
-     <LENGTH>25</LENGTH>
+     <KEY>PA_STRFN</KEY>
+     <ENTRY>Source object of TRFN</ENTRY>
+     <LENGTH>29</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_TTRFN</KEY>
+     <ENTRY>Target object of TRFN</ENTRY>
+     <LENGTH>29</LENGTH>
     </item>
    </TPOOL>
   </asx:values>

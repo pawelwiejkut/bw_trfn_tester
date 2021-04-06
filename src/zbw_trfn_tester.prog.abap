@@ -5,7 +5,8 @@
 *&---------------------------------------------------------------------*
 REPORT zbw_trfn_tester.
 
-PARAMETERS: pa_trfn TYPE rstranid.
+PARAMETERS: pa_strfn TYPE sobj_name,
+            pa_ttrfn TYPE sobj_name.
 SELECTION-SCREEN SKIP.
 
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-001.
@@ -21,7 +22,7 @@ SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE TEXT-002 .
     pa_stabl RADIOBUTTON GROUP rgr2 MODIF ID g1 USER-COMMAND uc2 DEFAULT 'X',
     pa_sownd RADIOBUTTON GROUP rgr2 MODIF ID g1.
 
-  PARAMETERS: pa_stabn TYPE char15 MODIF ID g12.
+  PARAMETERS: pa_stabn TYPE dd02l-tabname MODIF ID g12.
   SELECTION-SCREEN BEGIN OF LINE.
     SELECTION-SCREEN PUSHBUTTON (25) TEXT-003 USER-COMMAND create MODIF ID g13.
   SELECTION-SCREEN END OF LINE.
@@ -33,7 +34,7 @@ SELECTION-SCREEN BEGIN OF BLOCK b3 WITH FRAME TITLE TEXT-004 .
     pa_rtabl RADIOBUTTON GROUP rgr3 MODIF ID g3 USER-COMMAND uc3 DEFAULT 'X',
     pa_rownd RADIOBUTTON GROUP rgr3 MODIF ID g3.
 
-  PARAMETERS: pa_rtabn TYPE char15 MODIF ID g14.
+  PARAMETERS: pa_rtabn TYPE dd02l-tabname MODIF ID g14.
   SELECTION-SCREEN BEGIN OF LINE.
     SELECTION-SCREEN PUSHBUTTON (25) TEXT-005 USER-COMMAND create MODIF ID g15.
   SELECTION-SCREEN END OF LINE.
@@ -139,7 +140,8 @@ AT SELECTION-SCREEN OUTPUT.
 END-OF-SELECTION.
 
   TRY.
-      DATA(lobj_trfn_tester) = NEW zcl_bw_trfn_tester( pa_trfnid = pa_trfn ).
+      DATA(lobj_trfn_tester) = NEW zcl_bw_trfn_tester(  iv_strfn = pa_strfn
+                                                        iv_ttrfn = pa_ttrfn ).
     CATCH zcx_bw_trfn_tester.
       MESSAGE 'Tranformation do not exist or not active' TYPE 'I' DISPLAY LIKE 'E'.
   ENDTRY.
