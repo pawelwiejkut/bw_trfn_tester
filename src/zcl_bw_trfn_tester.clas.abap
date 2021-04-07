@@ -166,6 +166,11 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
             et_table      = <lt_source_table>
         ).
       ENDIF.
+    ELSE.
+      ASSIGN  ir_source_user_table->* TO <lt_source_table>.
+      IF sy-subrc <> 0.
+        MESSAGE 'Error during assign' TYPE 'E'.
+      ENDIF.
     ENDIF.
 
     ASSIGN lr_src_str_trfn->* TO <ls_trfn_source>.
