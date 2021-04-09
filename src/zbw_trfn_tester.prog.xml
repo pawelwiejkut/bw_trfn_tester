@@ -98,6 +98,12 @@
      <LENGTH>132</LENGTH>
     </item>
     <item>
+     <ID>I</ID>
+     <KEY>007</KEY>
+     <ENTRY>Load source data from variant</ENTRY>
+     <LENGTH>58</LENGTH>
+    </item>
+    <item>
      <ID>R</ID>
      <ENTRY>Test BW transformation</ENTRY>
      <LENGTH>22</LENGTH>
@@ -107,6 +113,18 @@
      <KEY>PA_CTRFN</KEY>
      <ENTRY>ABAP Class with new TRFN</ENTRY>
      <LENGTH>32</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_LRDAT</KEY>
+     <ENTRY>Load own result data</ENTRY>
+     <LENGTH>28</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_LSDAT</KEY>
+     <ENTRY>Load own test data</ENTRY>
+     <LENGTH>26</LENGTH>
     </item>
     <item>
      <ID>S</ID>
@@ -129,8 +147,8 @@
     <item>
      <ID>S</ID>
      <KEY>PA_ROWND</KEY>
-     <ENTRY>Own result data</ENTRY>
-     <LENGTH>23</LENGTH>
+     <ENTRY>Create own result data</ENTRY>
+     <LENGTH>30</LENGTH>
     </item>
     <item>
      <ID>S</ID>
@@ -146,9 +164,21 @@
     </item>
     <item>
      <ID>S</ID>
+     <KEY>PA_RTEMP</KEY>
+     <ENTRY>Template table</ENTRY>
+     <LENGTH>22</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_RVNAM</KEY>
+     <ENTRY>Result table variant name</ENTRY>
+     <LENGTH>33</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
      <KEY>PA_SOWND</KEY>
-     <ENTRY>Own test data</ENTRY>
-     <LENGTH>21</LENGTH>
+     <ENTRY>Create own test data</ENTRY>
+     <LENGTH>28</LENGTH>
     </item>
     <item>
      <ID>S</ID>
@@ -164,9 +194,21 @@
     </item>
     <item>
      <ID>S</ID>
+     <KEY>PA_STEMP</KEY>
+     <ENTRY>Template table</ENTRY>
+     <LENGTH>22</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
      <KEY>PA_STRFN</KEY>
      <ENTRY>Source object of TRFN</ENTRY>
      <LENGTH>29</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_SVNAM</KEY>
+     <ENTRY>Source table variant name</ENTRY>
+     <LENGTH>33</LENGTH>
     </item>
     <item>
      <ID>S</ID>
