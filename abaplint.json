@@ -152,7 +152,7 @@
         "use_bool_expression": true,
         "use_line_exists": true,
         "check_subrc": true,
-        "cyclomatic_complexity": flase,
+        "cyclomatic_complexity": false,
         "parser_missing_space": true,
         "identical_conditions": true,
         "prefer_is_not": true,
