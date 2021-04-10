@@ -75,7 +75,6 @@ AT SELECTION-SCREEN.
 
     WHEN  'CREATE_INPUT'.
       lr_data_src = zcl_bw_trfn_tester_ui=>create_data_package(
-         EXPORTING
            iv_stemp    = pa_stemp
            iv_svnam    = pa_svnam
            iv_repid    = sy-repid
@@ -83,7 +82,6 @@ AT SELECTION-SCREEN.
 
     WHEN  'CREATE_RESULT'.
       lr_data_res = zcl_bw_trfn_tester_ui=>create_data_package(
-        EXPORTING
           iv_stemp    = pa_rtemp
           iv_svnam    = pa_rvnam
           iv_repid    = sy-repid
@@ -91,14 +89,12 @@ AT SELECTION-SCREEN.
 
     WHEN  'LOAD_INPUT'.
       lr_data_src =  zcl_bw_trfn_tester_ui=>load_variant(
-         EXPORTING
            iv_type  = 'SRC'
            iv_svnam = pa_svnam
            iv_repid = sy-repid ).
 
     WHEN 'LOAD_RESULT'.
       lr_data_res = zcl_bw_trfn_tester_ui=>load_variant(
-        EXPORTING
           iv_type  = 'RES'
           iv_svnam = pa_rvnam
           iv_repid = sy-repid ).
