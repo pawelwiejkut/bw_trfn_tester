@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/pawelwiejkut/bw_trfn_tester/workflows/CI/badge.svg)](https://github.com/pawelwiejkut/bw_trfn_tester/actions)
 
+![](https://s4.gifyu.com/images/2021-04-10-17.23.40.gif)
+
 Warning:
 This tool is currently under development, you are using this on your own risk :)
 
