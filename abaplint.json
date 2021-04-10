@@ -58,11 +58,7 @@
         },
         "max_one_statement": true,
         "message_exists": true,
-        "method_length": {
-            "statements": 50,
-            "ignoreTestClasses": false,
-            "errorWhenEmpty": true
-        },
+        "method_length": false,
         "mix_returning": true,
         "msag_consistency": true,
         "nesting": {
@@ -156,9 +152,7 @@
         "use_bool_expression": true,
         "use_line_exists": true,
         "check_subrc": true,
-        "cyclomatic_complexity": {
-            "max": 10
-        },
+        "cyclomatic_complexity": flase,
         "parser_missing_space": true,
         "identical_conditions": true,
         "prefer_is_not": true,
