@@ -68,9 +68,22 @@ CLASS zcl_bw_trfn_tester DEFINITION
     "! @parameter ir_user_result | <p class="shorttext synchronized" lang="en">User result data</p>
     "! @parameter iv_user_table_name | <p class="shorttext synchronized" lang="en">User result DDIC table name</p>
     METHODS compare_trfn_to_user_table
-      IMPORTING ir_trfn_result     TYPE REF TO data
+      IMPORTING ir_trfn_result     TYPE REF TO cl_rsbk_data_segment
                 ir_user_result     TYPE REF TO data
                 iv_user_table_name TYPE string.
+
+    "! <p class="shorttext synchronized" lang="en"></p>
+    "! Create type based on basic description
+    "! @parameter iv_intype | <p class="shorttext synchronized" lang="en"></p>
+    "! @parameter iv_leng | <p class="shorttext synchronized" lang="en"></p>
+    "! @parameter iv_decim | <p class="shorttext synchronized" lang="en"></p>
+    "! @parameter rv_type | <p class="shorttext synchronized" lang="en"></p>
+    CLASS-METHODS create_type
+      IMPORTING iv_intype      TYPE string
+                iv_leng        TYPE ddleng
+                iv_decim       TYPE decimals
+      RETURNING VALUE(rv_type) TYPE REF TO cl_abap_datadescr.
+
 
   PROTECTED SECTION.
 
@@ -140,6 +153,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
     DATA: lobj_trfn_prog  TYPE REF TO object.
 
     FIELD-SYMBOLS: <lt_source_table> TYPE STANDARD TABLE,
+                   <lt_result_table> TYPE STANDARD TABLE,
                    <ls_trfn_source>  TYPE any,
                    <lt_trfn_source>  TYPE STANDARD TABLE,
                    <ls_trfn_result>  TYPE any.
@@ -168,6 +182,23 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
       ENDIF.
     ELSE.
       ASSIGN  ir_source_user_table->* TO <lt_source_table>.
+      IF sy-subrc <> 0.
+        MESSAGE 'Error during assign' TYPE 'E'.
+      ENDIF.
+    ENDIF.
+
+    IF iv_result_ddic_table IS NOT INITIAL.
+      ASSIGN lr_result_table->* TO <lt_result_table>.
+      IF sy-subrc = 0.
+        get_data_from_table(
+           EXPORTING
+            iv_table_name = iv_result_ddic_table
+           IMPORTING
+            et_table      = <lt_result_table>
+        ).
+      ENDIF.
+    ELSE.
+      ASSIGN  ir_result_user_table->* TO <lt_result_table>.
       IF sy-subrc <> 0.
         MESSAGE 'Error during assign' TYPE 'E'.
       ENDIF.
@@ -226,8 +257,8 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
     ENDTRY.
 
     compare_trfn_to_user_table(
-        ir_trfn_result = lro_segment_outbound->get_data(  )
-        ir_user_result = lr_result_table
+        ir_trfn_result = lro_segment_outbound
+        ir_user_result = ir_result_user_table
         iv_user_table_name = iv_result_ddic_table
     ).
 
@@ -338,68 +369,117 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
     DATA: lv_where           TYPE string,
           lv_no_changes      TYPE flag,
-          lr_new_str_to_trfn TYPE REF TO data,
-          lr_table_new       TYPE REF TO data.
+          lr_trfn_no_tech    TYPE REF TO data,
+          lr_user_result     TYPE REF TO data,
+          ls_comp            TYPE  cl_abap_structdescr=>component,
+          lt_comp            TYPE cl_abap_structdescr=>component_table.
 
-    FIELD-SYMBOLS: <lt_user_result>     TYPE STANDARD TABLE,
-                   <lt_new_str_to_trfn> TYPE STANDARD TABLE,
-                   <lt_trfn_result>     TYPE STANDARD TABLE,
-                   <lt_table_new>       TYPE STANDARD TABLE.
+    FIELD-SYMBOLS: <lt_user_result>  TYPE STANDARD TABLE,
+                   <lt_no_tech_trfn> TYPE STANDARD TABLE,
+                   <lt_trfn_result>  TYPE STANDARD TABLE.
 
-    CREATE DATA lr_new_str_to_trfn TYPE STANDARD TABLE OF (iv_user_table_name).
-    ASSIGN lr_new_str_to_trfn->* TO <lt_new_str_to_trfn>.
-    IF sy-subrc <> 0.
-      MESSAGE 'Error during assign' TYPE 'E'.
-    ENDIF.
+    DATA(lt_component) = ir_trfn_result->get_fieldlist( i_with_recno = rs_c_false ).
 
-    ASSIGN ir_user_result->* TO <lt_user_result>.
-    IF sy-subrc <> 0.
-      MESSAGE 'Error during assign' TYPE 'E'.
-    ENDIF.
+    LOOP AT lt_component REFERENCE INTO DATA(lr_component) WHERE fieldname <> 'SID' AND
+                                                           fieldname <> 'DATAPAKID' AND
+                                                           fieldname <> 'RECORD' AND
+                                                           fieldname <> 'REQTSN'.
 
-    ASSIGN ir_trfn_result->* TO <lt_trfn_result>.
-    IF sy-subrc <> 0.
-      MESSAGE 'Error during assign' TYPE 'E'.
-    ENDIF.
 
-    MOVE-CORRESPONDING <lt_trfn_result> TO <lt_new_str_to_trfn>.
+      ls_comp-name = lr_component->fieldname.
+      ls_comp-type = create_type(
+                       iv_intype = CONV #( lr_component->inttype )
+                       iv_leng   = lr_component->leng
+                       iv_decim  = lr_component->decimals
+                     ).
 
-    SELECT fieldname, keyflag
-    FROM dd03l
-    INTO TABLE @DATA(lt_dd03l)
-    WHERE tabname = @iv_user_table_name.
 
-    IF sy-subrc <> 0.
-      MESSAGE 'No fields found for result table' TYPE 'E'.
-    ENDIF.
-
-    LOOP AT lt_dd03l REFERENCE INTO DATA(lr_dd03l) WHERE keyflag = abap_true.
-
-      IF lv_where IS INITIAL.
-        lv_where = |{ lr_dd03l->fieldname } = @<lt_trfn_result>-{  lr_dd03l->fieldname } |.
-      ELSE.
-        lv_where = |{ lv_where } and { lr_dd03l->fieldname } = @<lt_trfn_result>-{ lr_dd03l->fieldname }|.
-      ENDIF.
+      APPEND ls_comp TO lt_comp.
 
     ENDLOOP.
 
-    SELECT * FROM
-    (iv_user_table_name)
-    FOR ALL ENTRIES IN @<lt_trfn_result>
-    WHERE (lv_where)
-    INTO TABLE @<lt_user_result>.
+    TRY.
+        DATA(lr_type_str) = cl_abap_structdescr=>create( p_components = lt_comp ).
+      CATCH cx_sy_struct_creation.
+        MESSAGE 'Error suring str creation' TYPE 'E'.
+    ENDTRY.
 
+    TRY.
+        DATA(lr_type_table) = cl_abap_tabledescr=>create( lr_type_str ).
+      CATCH cx_sy_table_creation .
+    ENDTRY.
+
+    CREATE DATA: lr_trfn_no_tech TYPE HANDLE lr_type_table.
+    ASSIGN lr_trfn_no_tech->* TO <lt_no_tech_trfn>.
     IF sy-subrc <> 0.
-      MESSAGE 'Error during result data select' TYPE 'E'.
+      MESSAGE 'Error during assign' TYPE 'E'.
+    ENDIF.
+
+    DATA(lr_trfn_result) = ir_trfn_result->get_data( ).
+
+    ASSIGN lr_trfn_result->* TO <lt_trfn_result>.
+    IF sy-subrc <> 0.
+      MESSAGE 'Error during assign' TYPE 'E'.
+    ENDIF.
+
+    MOVE-CORRESPONDING <lt_trfn_result> TO <lt_no_tech_trfn>.
+
+    IF iv_user_table_name IS NOT INITIAL.
+
+      SELECT fieldname, keyflag
+      FROM dd03l
+      INTO TABLE @DATA(lt_dd03l)
+      WHERE tabname = @iv_user_table_name.
+
+      IF sy-subrc <> 0.
+        MESSAGE 'No fields found for result table' TYPE 'E'.
+      ENDIF.
+
+      CREATE DATA lr_user_result TYPE STANDARD TABLE OF (iv_user_table_name).
+      ASSIGN lr_user_result->* TO <lt_user_result>.
+
+      IF sy-subrc <> 0.
+        MESSAGE 'Error during assign' TYPE 'E'.
+      ENDIF.
+
+      LOOP AT lt_dd03l REFERENCE INTO DATA(lr_dd03l) WHERE keyflag = abap_true.
+
+        IF lv_where IS INITIAL.
+          lv_where = |{ lr_dd03l->fieldname } = @<lt_trfn_result>-{  lr_dd03l->fieldname } |.
+        ELSE.
+          lv_where = |{ lv_where } and { lr_dd03l->fieldname } = @<lt_trfn_result>-{ lr_dd03l->fieldname }|.
+        ENDIF.
+
+      ENDLOOP.
+      TRY.
+          SELECT * FROM
+          (iv_user_table_name)
+          FOR ALL ENTRIES IN @<lt_trfn_result>
+          WHERE (lv_where)
+          INTO TABLE @<lt_user_result>.
+          IF sy-subrc <> 0.
+            MESSAGE 'Error during  select' TYPE 'E'.
+          ENDIF.
+        CATCH cx_sy_dynamic_osql_semantics.
+          MESSAGE ' Error during result table check' TYPE 'E'.
+      ENDTRY.
+
+    ELSE.
+
+      ASSIGN ir_user_result->* TO <lt_user_result>.
+      IF sy-subrc <> 0.
+        MESSAGE 'Error during assign' TYPE 'E'.
+      ENDIF.
+
     ENDIF.
 
     SORT <lt_user_result>.
-    SORT <lt_new_str_to_trfn>.
+    SORT <lt_no_tech_trfn>.
 
     CALL FUNCTION 'CTVB_COMPARE_TABLES_3'
       EXPORTING
         it_table_old  = <lt_user_result>
-        it_table_new  = <lt_new_str_to_trfn>
+        it_table_new  = <lt_no_tech_trfn>
         iv_key_count  = lines( lt_dd03l )
 *       iv_key_table  =
       IMPORTING
@@ -410,7 +490,26 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
     IF lv_no_changes = abap_true.
       MESSAGE 'Result is compatible with table data' TYPE 'S'.
+    ELSE.
+      MESSAGE 'Tables are different' TYPE 'I' DISPLAY LIKE 'W'.
     ENDIF.
+
+  ENDMETHOD.
+
+  METHOD create_type.
+
+    rv_type = COND #(
+        WHEN iv_intype = 'STRING'  THEN cl_abap_elemdescr=>get_string( )
+        WHEN iv_intype = 'XSTRING' THEN cl_abap_elemdescr=>get_xstring( )
+        WHEN iv_intype = 'I' THEN cl_abap_elemdescr=>get_i( )
+        WHEN iv_intype = 'F' THEN cl_abap_elemdescr=>get_f( )
+        WHEN iv_intype = 'D' THEN cl_abap_elemdescr=>get_d( )
+        WHEN iv_intype = 'T' THEN cl_abap_elemdescr=>get_t( )
+        WHEN iv_intype = 'C' THEN cl_abap_elemdescr=>get_c( p_length = CONV #( iv_leng ) )
+        WHEN iv_intype = 'N' THEN cl_abap_elemdescr=>get_n( p_length = CONV #( iv_leng  ) )
+        WHEN iv_intype = 'X' THEN cl_abap_elemdescr=>get_x( p_length = CONV #( iv_leng  ) )
+        WHEN iv_intype = 'P' THEN cl_abap_elemdescr=>get_p( p_length = CONV #( iv_leng  )
+                                                          p_decimals = CONV #( iv_decim ) ) ).
 
   ENDMETHOD.
 
