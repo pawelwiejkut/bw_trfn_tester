@@ -5,24 +5,37 @@ CLASS zcl_bw_trfn_tester_ui DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS: create_data_package
-      IMPORTING iv_stemp    TYPE tabname
-                iv_svnam    TYPE char20
-                iv_repid    TYPE sy-repid
-                iv_type     TYPE char3
-      EXPORTING er_data_pkg TYPE REF TO data.
+    CLASS-METHODS:
+      "! <p class="shorttext synchronized" lang="en"></p>
+      "! Create user data package
+      "! @parameter iv_stemp | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter iv_svnam | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter iv_repid | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter iv_type | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter er_data_pkg | <p class="shorttext synchronized" lang="en"></p>
+      create_data_package
+        IMPORTING iv_stemp           TYPE tabname
+                  iv_svnam           TYPE char20
+                  iv_repid           TYPE sy-repid
+                  iv_type            TYPE char3
+        RETURNING VALUE(er_data_pkg) TYPE REF TO data.
 
-    CLASS-METHODS: load_variant
-      IMPORTING iv_type     TYPE char3
-                iv_svnam    TYPE char20
-                iv_repid    TYPE sy-repid
-      EXPORTING er_data_pkg TYPE REF TO data.
+    CLASS-METHODS:
+      "! <p class="shorttext synchronized" lang="en"></p>
+      "! Load saved data from database
+      "! @parameter iv_type | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter iv_svnam | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter iv_repid | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter er_data_pkg | <p class="shorttext synchronized" lang="en"></p>
+      load_variant
+        IMPORTING iv_type            TYPE char3
+                  iv_svnam           TYPE char20
+                  iv_repid           TYPE sy-repid
+        RETURNING VALUE(er_data_pkg) TYPE REF TO data.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
-
-
 
 CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
 
@@ -61,8 +74,6 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
       IF sy-subrc <> 0.
         MESSAGE 'Error during type select' TYPE 'E'.
       ENDIF.
-
-
 
       lt_type_result = CORRESPONDING #(  lt_dd03l MAPPING input_name = fieldname
                                                           input_inntype = inttype

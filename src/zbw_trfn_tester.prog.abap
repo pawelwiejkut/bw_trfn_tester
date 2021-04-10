@@ -12,8 +12,8 @@ TYPES: BEGIN OF ty_type_input,
          input_type      TYPE string.
 TYPES: END OF ty_type_input.
 
-DATA: lr_data_src      TYPE REF TO data,
-      lr_data_res      TYPE REF TO data.
+DATA: lr_data_src TYPE REF TO data,
+      lr_data_res TYPE REF TO data.
 
 PARAMETERS: pa_strfn TYPE rstran-sourcename,
             pa_ttrfn TYPE rstran-targetname.
@@ -74,45 +74,34 @@ AT SELECTION-SCREEN.
   CASE sscrfields-ucomm.
 
     WHEN  'CREATE_INPUT'.
-      zcl_bw_trfn_tester_ui=>create_data_package(
-        EXPORTING
-          iv_stemp    = pa_stemp
-          iv_svnam    = pa_svnam
-          iv_repid    = sy-repid
-          iv_type     = 'SRC'
-        IMPORTING
-          er_data_pkg = lr_data_src
-      ).
+      lr_data_src = zcl_bw_trfn_tester_ui=>create_data_package(
+         EXPORTING
+           iv_stemp    = pa_stemp
+           iv_svnam    = pa_svnam
+           iv_repid    = sy-repid
+           iv_type     = 'SRC' ).
 
     WHEN  'CREATE_RESULT'.
-      zcl_bw_trfn_tester_ui=>create_data_package(
-       EXPORTING
-         iv_stemp    = pa_rtemp
-         iv_svnam    = pa_rvnam
-         iv_repid    = sy-repid
-         iv_type     = 'RES'
-       IMPORTING
-         er_data_pkg = lr_data_res
-     ).
+      lr_data_res = zcl_bw_trfn_tester_ui=>create_data_package(
+        EXPORTING
+          iv_stemp    = pa_rtemp
+          iv_svnam    = pa_rvnam
+          iv_repid    = sy-repid
+          iv_type     = 'RES' ).
 
     WHEN  'LOAD_INPUT'.
-
-      zcl_bw_trfn_tester_ui=>load_variant(
-        EXPORTING
-          iv_type  = 'SRC'
-          iv_svnam = pa_svnam
-          iv_repid = sy-repid
-        IMPORTING er_data_pkg = lr_data_src
-      ).
+      lr_data_src =  zcl_bw_trfn_tester_ui=>load_variant(
+         EXPORTING
+           iv_type  = 'SRC'
+           iv_svnam = pa_svnam
+           iv_repid = sy-repid ).
 
     WHEN 'LOAD_RESULT'.
-      zcl_bw_trfn_tester_ui=>load_variant(
+      lr_data_res = zcl_bw_trfn_tester_ui=>load_variant(
         EXPORTING
           iv_type  = 'RES'
           iv_svnam = pa_rvnam
-          iv_repid = sy-repid
-        IMPORTING er_data_pkg = lr_data_res
-      ).
+          iv_repid = sy-repid ).
 
   ENDCASE.
 
