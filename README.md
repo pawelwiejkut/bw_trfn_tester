@@ -15,8 +15,8 @@ This development can be used to test your transformation code in following scena
 3.  Performance tests old vs new.
 
 ## TO-DO:<br />
--Support of compare to old version,<br />
--Supporting multi-transformation flows (like including Infosource).
+
+Please click [here](https://github.com/pawelwiejkut/bw_trfn_tester/issues/2).
 
 ## How to install
 You have 2 ways:
