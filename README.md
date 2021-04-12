@@ -21,7 +21,7 @@ Please click [here](https://github.com/pawelwiejkut/bw_trfn_tester/issues/2).
 ## How to install
 You have 2 ways:
 1. Recomended: Clone this repository using [ABAP Git](https://github.com/larshp/abapGit), 
-2. Copy full program from [last_build folder](https://raw.githubusercontent.com/pawelwiejkut/bw_trfn_tester/main/last_build/zbw_trfn_tester.abap) and text elements from [here](https://github.com/pawelwiejkut/bw_trfn_tester/blob/main/src/zbw_trfn_tester.prog.xml) 
+2. Not tested: Copy full program from [last_build folder](https://raw.githubusercontent.com/pawelwiejkut/bw_trfn_tester/main/last_build/zbw_trfn_tester.abap) and text elements from [here](https://github.com/pawelwiejkut/bw_trfn_tester/blob/main/src/zbw_trfn_tester.prog.xml) 
 
 ## How to contribute ?
 
