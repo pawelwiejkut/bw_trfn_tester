@@ -195,29 +195,53 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
 
     IF iv_svnam IS NOT INITIAL.
 
-      DATA: lt_var_tab  TYPE STANDARD TABLE OF zbwtrfn_var_type,
-            ls_var_tab  TYPE zbwtrfn_var_type,
-            lt_data_src TYPE STANDARD TABLE OF zbwtrfn_var_data,
-            ls_data_src TYPE zbwtrfn_var_data.
+      DATA: lr_dat_tab TYPE REF TO data,
+            lr_dat_str TYPE REF TO data,
+            lr_typ_tab TYPE REF TO data,
+            lr_typ_str TYPE REF TO data.
+
+      zcl_bw_trfn_tester=>create_global_ddic( ).
+
+      CREATE DATA lr_typ_tab  TYPE STANDARD TABLE OF ('ZBWTRFN_VAR_TYPE').
+      CREATE DATA lr_typ_str TYPE ('ZBWTRFN_VAR_TYPE').
+      CREATE DATA lr_dat_tab TYPE STANDARD TABLE OF ('ZBWTRFN_VAR_DAT').
+      CREATE DATA lr_dat_str TYPE ('ZBWTRFN_VAR_DAT').
+
+      FIELD-SYMBOLS: <lt_typ_tab> TYPE STANDARD TABLE,
+                     <ls_typ_tab> TYPE any,
+                     <lt_dat_tab> TYPE STANDARD TABLE,
+                     <ls_dat_tab> TYPE any.
+
+      ASSIGN lr_typ_tab->* TO <lt_typ_tab>.
+      ASSIGN lr_typ_str->* TO <ls_typ_tab>.
+      ASSIGN lr_dat_tab->* TO <lt_dat_tab>.
+      ASSIGN lr_dat_str->* TO <ls_dat_tab>.
 
       LOOP AT lt_type_result REFERENCE INTO DATA(lr_type_res_src).
 
-        ls_var_tab-template_table = iv_stemp.
-        ls_var_tab-variant = iv_svnam.
-        ls_var_tab-data_type = iv_type.
-        ls_var_tab-type = lr_type_res_src->input_inntype.
-        ls_var_tab-fieldnm = lr_type_res_src->input_name.
-        ls_var_tab-length =  lr_type_res_src->input_length.
-        ls_var_tab-decim =   lr_type_res_src->input_dec.
+        ASSIGN COMPONENT 'TEMPLATE_TABLE' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_template_table>).
+        <lv_template_table> = iv_stemp.
+        ASSIGN COMPONENT 'VARIANT' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_variant>).
+        <lv_variant> = iv_svnam.
+        ASSIGN COMPONENT 'DATA_TYPE' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_data_type>).
+        <lv_data_type> = iv_type.
+        ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_field_name>).
+        <lv_field_name> = lr_type_res_src->input_name.
+        ASSIGN COMPONENT 'LENGTH' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_length>).
+        <lv_length> = lr_type_res_src->input_length.
+        ASSIGN COMPONENT 'DECIM' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_decim>).
+        <lv_decim> = lr_type_res_src->input_dec.
+        ASSIGN COMPONENT 'TYPE' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_type>).
+        <lv_type> = lr_type_res_src->input_inntype.
 
-        APPEND ls_var_tab TO lt_var_tab.
+        APPEND <ls_typ_tab>  TO <lt_typ_tab> .
 
       ENDLOOP.
-
-      INSERT zbwtrfn_var_type FROM TABLE @lt_var_tab.
-      IF sy-subrc <> 0 .
-        MESSAGE 'Error during variant' TYPE 'E'.
-      ENDIF.
+      TRY.
+          INSERT ('ZBWTRFN_VAR_TYPE') FROM TABLE @<lt_typ_tab> .
+        CATCH cx_sy_open_sql_db.
+          MESSAGE 'Error during variant insert' TYPE 'E'.
+      ENDTRY.
 
       LOOP AT <lt_data_type> ASSIGNING FIELD-SYMBOL(<ls_data_type>).
         DATA(lv_rnr) = sy-tabix.
@@ -229,14 +253,21 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
           READ TABLE lt_type_result INDEX sy-index REFERENCE INTO lr_type_res_src.
 
           IF sy-subrc = 0.
-            ls_data_src-rownr = lv_rnr.
-            ls_data_src-template_table = iv_stemp.
-            ls_data_src-variant = iv_svnam.
-            ls_data_src-data_type = iv_type.
-            ls_data_src-fieldnm = lr_type_res_src->input_name.
-            ls_data_src-value = <ls_component>.
+            ASSIGN COMPONENT 'ROWNR' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_rownr>).
+            <lv_rownr> = lv_rnr.
+            ASSIGN COMPONENT 'TEMPLATE_TABLE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_temp_table>).
+            <lv_temp_table> = iv_stemp.
+            ASSIGN COMPONENT 'VARIANT' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_variant_d>).
+            <lv_variant_d> = iv_svnam.
+            ASSIGN COMPONENT 'DATA_TYPE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_dat_typ>).
+            <lv_dat_typ> = iv_type.
+            ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_FIELDNM>).
+            <lv_fieldnm> = lr_type_res_src->input_name.
+            ASSIGN COMPONENT 'VALUE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_VALUE>).
+            <lv_value> = <ls_component>.
 
-            APPEND ls_data_src TO lt_data_src.
+
+            APPEND  <ls_dat_tab> TO  <lt_dat_tab>.
 
           ENDIF.
 
@@ -244,7 +275,7 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
 
       ENDLOOP.
 
-      INSERT zbwtrfn_var_data FROM TABLE @lt_data_src.
+      INSERT ('ZBWTRFN_VAR_DAT') FROM TABLE @<lt_dat_tab>.
       IF sy-subrc <> 0.
         MESSAGE 'Error during assign' TYPE 'E'.
       ENDIF.
@@ -265,7 +296,28 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
           ls_comp          TYPE  cl_abap_structdescr=>component,
           lt_comp          TYPE cl_abap_structdescr=>component_table,
           lt_data_fcat_src TYPE  slis_t_fieldcat_alv,
-          lr_data_src      TYPE REF TO data.
+          lr_data_src      TYPE REF TO data,
+          lr_dat_tab       TYPE REF TO data,
+          lr_dat_str       TYPE REF TO data,
+          lr_typ_tab       TYPE REF TO data,
+          lr_typ_str       TYPE REF TO data.
+
+    zcl_bw_trfn_tester=>create_global_ddic( ).
+
+    CREATE DATA lr_typ_tab  TYPE STANDARD TABLE OF ('ZBWTRFN_VAR_TYPE').
+    CREATE DATA lr_typ_str TYPE ('ZBWTRFN_VAR_TYPE').
+    CREATE DATA lr_dat_tab TYPE STANDARD TABLE OF ('ZBWTRFN_VAR_DAT').
+    CREATE DATA lr_dat_str TYPE ('ZBWTRFN_VAR_DAT').
+
+    FIELD-SYMBOLS: <lt_typ_tab> TYPE STANDARD TABLE,
+                   <ls_typ_tab> TYPE any,
+                   <lt_dat_tab> TYPE STANDARD TABLE,
+                   <ls_dat_tab> TYPE any.
+
+    ASSIGN lr_typ_tab->* TO <lt_typ_tab>.
+    ASSIGN lr_typ_str->* TO <ls_typ_tab>.
+    ASSIGN lr_dat_tab->* TO <lt_dat_tab>.
+    ASSIGN lr_dat_str->* TO <ls_dat_tab>.
 
     FIELD-SYMBOLS:
         <lt_data_type> TYPE STANDARD TABLE.
@@ -280,22 +332,29 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_saved_data> TYPE any.
 
+    zcl_bw_trfn_tester=>create_global_ddic( ).
 
     SELECT * FROM
-    zbwtrfn_var_type
-    INTO TABLE @DATA(lt_var_type)
+    ('ZBWTRFN_VAR_TYPE')
+    INTO TABLE @<lt_typ_tab>
     WHERE variant = @iv_svnam
     AND data_type = @iv_type.
     IF sy-subrc <> 0.
       MESSAGE 'Error during select' TYPE 'E'.
     ENDIF.
 
-    LOOP AT lt_var_type REFERENCE INTO DATA(lr_var_type).
-      ls_comp-name =  lr_var_type->fieldnm.
+    LOOP AT <lt_typ_tab> ASSIGNING <ls_typ_tab>.
+
+      ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_field_name>).
+      ASSIGN COMPONENT 'TYPE' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_type>).
+      ASSIGN COMPONENT 'LENGTH' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_length>).
+      ASSIGN COMPONENT 'DECIM' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_decim>).
+
+      ls_comp-name =  <lv_field_name>.
       ls_comp-type = zcl_bw_trfn_tester=>create_type(
-                       iv_intype = CONV #( lr_var_type->type )
-                       iv_leng   = lr_var_type->length
-                       iv_decim  = lr_var_type->decim
+                       iv_intype = CONV #( <lv_type> )
+                       iv_leng   = <lv_length>
+                       iv_decim  = <lv_decim>
                      ) .
       APPEND ls_comp TO lt_comp.
     ENDLOOP.
@@ -324,32 +383,37 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
     ENDIF.
 
     SELECT * FROM
-    zbwtrfn_var_data
-    INTO TABLE @DATA(lt_var_data)
+    ('ZBWTRFN_VAR_DAT')
+    INTO TABLE @<lt_dat_tab>
     WHERE variant = @iv_svnam
     AND data_type = @iv_type.
     IF sy-subrc <> 0.
       MESSAGE 'Error during variant select' TYPE 'E'.
     ENDIF.
 
-    LOOP AT lt_var_data REFERENCE INTO DATA(lr_var_group) GROUP BY lr_var_group->rownr.
+    DATA(lv_groupby) = 'ROWNR'.
 
-      LOOP AT GROUP lr_var_group REFERENCE INTO DATA(lr_var_data).
+    LOOP AT <lt_dat_tab> ASSIGNING FIELD-SYMBOL(<ls_group>) GROUP BY lv_groupby.
 
-        ASSIGN COMPONENT lr_var_data->fieldnm OF STRUCTURE <ls_saved_data> TO FIELD-SYMBOL(<ls_field>).
+      LOOP AT GROUP <ls_group> ASSIGNING <ls_dat_tab>.
+
+        ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_fieldnm>).
+        ASSIGN COMPONENT 'ROWNR' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_rownr>).
+        ASSIGN COMPONENT 'VALUE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_VALUE>).
+
+        ASSIGN COMPONENT <lv_fieldnm> OF STRUCTURE <ls_saved_data> TO FIELD-SYMBOL(<ls_field>).
         IF sy-subrc <> 0.
           MESSAGE 'Error during type select' TYPE 'E'.
         ENDIF.
-        <ls_field> = lr_var_data->value.
+        <ls_field> = <lv_VALUE>.
 
-        IF lr_var_group->rownr = 1.
+        IF <lv_rownr> = 1.
           lt_data_fcat_src = VALUE #(
            BASE lt_data_fcat_src (
-           seltext_m = lr_var_data->fieldnm
-           fieldname = to_upper( lr_var_data->fieldnm )
+           seltext_m = <lv_fieldnm>
+           fieldname = to_upper( <lv_fieldnm> )
            edit = abap_true ) ).
         ENDIF.
-
 
       ENDLOOP.
 

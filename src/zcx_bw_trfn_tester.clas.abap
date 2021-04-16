@@ -1,6 +1,7 @@
 CLASS zcx_bw_trfn_tester DEFINITION
-INHERITING FROM cx_static_check
   PUBLIC
+  INHERITING FROM cx_static_check
+  FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.

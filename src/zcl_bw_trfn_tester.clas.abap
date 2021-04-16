@@ -5,6 +5,10 @@ CLASS zcl_bw_trfn_tester DEFINITION
   PUBLIC SECTION.
 
     "! <p class="shorttext synchronized" lang="en"></p>
+    "! Create global DDIC Tables if not exists
+    CLASS-METHODS create_global_ddic.
+
+    "! <p class="shorttext synchronized" lang="en"></p>
     "!
     "! @parameter pa_trfnid | <p class="shorttext synchronized" lang="en">Transformation ID</p>
     "! @raising zcx_bw_trfn_tester | <p class="shorttext synchronized" lang="en">Invalid TRFN ID</p>
@@ -367,12 +371,12 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
   METHOD compare_trfn_to_user_table.
 
-    DATA: lv_where           TYPE string,
-          lv_no_changes      TYPE flag,
-          lr_trfn_no_tech    TYPE REF TO data,
-          lr_user_result     TYPE REF TO data,
-          ls_comp            TYPE  cl_abap_structdescr=>component,
-          lt_comp            TYPE cl_abap_structdescr=>component_table.
+    DATA: lv_where        TYPE string,
+          lv_no_changes   TYPE flag,
+          lr_trfn_no_tech TYPE REF TO data,
+          lr_user_result  TYPE REF TO data,
+          ls_comp         TYPE  cl_abap_structdescr=>component,
+          lt_comp         TYPE cl_abap_structdescr=>component_table.
 
     FIELD-SYMBOLS: <lt_user_result>  TYPE STANDARD TABLE,
                    <lt_no_tech_trfn> TYPE STANDARD TABLE,
@@ -498,6 +502,8 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
   METHOD create_type.
 
+  data(lv_plength) = ( conv int4( iv_leng ) + 1 ) / 2.
+
     rv_type = COND #(
         WHEN iv_intype = 'STRING'  THEN cl_abap_elemdescr=>get_string( )
         WHEN iv_intype = 'XSTRING' THEN cl_abap_elemdescr=>get_xstring( )
@@ -508,8 +514,148 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
         WHEN iv_intype = 'C' THEN cl_abap_elemdescr=>get_c( p_length = CONV #( iv_leng ) )
         WHEN iv_intype = 'N' THEN cl_abap_elemdescr=>get_n( p_length = CONV #( iv_leng  ) )
         WHEN iv_intype = 'X' THEN cl_abap_elemdescr=>get_x( p_length = CONV #( iv_leng  ) )
-        WHEN iv_intype = 'P' THEN cl_abap_elemdescr=>get_p( p_length = CONV #( iv_leng  )
+        WHEN iv_intype = 'P' THEN cl_abap_elemdescr=>get_p( p_length = CONV #( lv_plength  )
                                                           p_decimals = CONV #( iv_decim ) ) ).
+
+  ENDMETHOD.
+
+  METHOD create_global_ddic.
+
+    TYPES: BEGIN OF t_tables,
+             tablename TYPE string.
+             INCLUDE   TYPE dd03p.
+    TYPES: END OF t_tables.
+
+    TYPES: t_ty_tables TYPE STANDARD TABLE OF t_tables WITH EMPTY KEY.
+
+    DATA: lv_objname  TYPE ddobjname,
+          lv_rc       LIKE sy-subrc,
+          lv_obj_name TYPE tadir-obj_name,
+          ls_dd02v    TYPE dd02v,
+          ls_dd09l    TYPE dd09l,
+          lv_exist    TYPE abap_bool,
+          lt_dd03p    TYPE STANDARD TABLE OF dd03p WITH EMPTY KEY.
+
+    FIELD-SYMBOLS: <ls_dd03p> LIKE LINE OF lt_dd03p.
+
+    DATA(lt_tables) = VALUE t_ty_tables(
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'CLNT' position ='0001'
+    keyflag = abap_true datatype = 'CHAR' leng = '000003' )
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'VARIANT' position ='0002'
+    keyflag = abap_true datatype = 'CHAR' leng = '000030' )
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'TEMPLATE_TABLE' position ='0003'
+    keyflag = abap_true datatype = 'CHAR' leng = '000030' )
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'DATA_TYPE' position ='0004'
+    keyflag = abap_true datatype = 'CHAR' leng = '000010' )
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'FIELDNM' position ='0005'
+    keyflag = abap_true datatype = 'CHAR' leng = '000030' )
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'ROWNR' position ='0006'
+    keyflag = abap_true datatype = 'INT4' leng = '10' )
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'VALUE' position ='0007'
+    keyflag = abap_false datatype = 'CHAR' leng = '255' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'CLNT' position ='0001'
+    keyflag = abap_true datatype = 'CHAR' leng = '000003' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'VARIANT' position ='0002'
+    keyflag = abap_true datatype = 'CHAR' leng = '000030' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'TEMPLATE_TABLE' position ='0003'
+    keyflag = abap_true datatype = 'CHAR' leng = '000030' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'DATA_TYPE' position ='0004'
+    keyflag = abap_true datatype = 'CHAR' leng = '000010' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'LENGTH' position ='0005'
+    keyflag = abap_true datatype = 'NUMC' leng = '000006' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'DECIM' position ='0006'
+    keyflag = abap_true datatype = 'NUMC' leng = '000006' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'FIELDNM' position ='0007'
+    keyflag = abap_true datatype = 'CHAR' leng = '000030' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'TYPE' position ='0008'
+    keyflag = abap_true datatype = 'CHAR' leng = '000001' ) ).
+
+
+    LOOP AT lt_tables REFERENCE INTO DATA(lr_tables) GROUP BY lr_tables->tablename
+    REFERENCE INTO DATA(lr_table_gropup).
+
+      LOOP AT GROUP lr_table_gropup REFERENCE INTO DATA(lr_table).
+
+        CLEAR lv_exist.
+
+        IF sy-index = 0.
+
+          ls_dd09l-tabname  = lr_table->tablename.
+          ls_dd09l-as4local = 'A'.
+          ls_dd09l-tabkat   = '1'.
+          ls_dd09l-tabart   = 'APPL1'.
+          ls_dd09l-bufallow = 'N'.
+
+          ls_dd02v-tabname    = lr_table->tablename.
+          ls_dd02v-ddlanguage = 'E'.
+          ls_dd02v-tabclass   = 'TRANSP'.
+          ls_dd02v-ddtext     = 'Generated by ZBW TRFN Tester'.
+          ls_dd02v-contflag   = 'L'.
+          ls_dd02v-exclass    = '1'.
+        ENDIF.
+
+        SELECT SINGLE @abap_true ##SUBRC_OK
+        FROM dd02l
+        INTO @lv_exist
+        WHERE   tabname = @lr_table->tablename
+        AND     as4local  = 'A'.
+
+        CHECK lv_exist = abap_false.
+
+        lv_objname = lr_table->tablename.
+
+        APPEND INITIAL LINE TO lt_dd03p ASSIGNING <ls_dd03p>.
+        <ls_dd03p>-tabname   = lr_table->tablename.
+        <ls_dd03p>-fieldname = lr_table->fieldname.
+        <ls_dd03p>-position  = lr_table->position.
+        <ls_dd03p>-keyflag   = lr_table->keyflag.
+        <ls_dd03p>-datatype  = lr_table->datatype.
+        <ls_dd03p>-leng      = lr_table->leng.
+
+      ENDLOOP.
+
+      IF lv_exist = abap_false.
+
+        CALL FUNCTION 'DDIF_TABL_PUT'
+          EXPORTING
+            name              = lv_objname
+            dd02v_wa          = ls_dd02v
+            dd09l_wa          = ls_dd09l
+          TABLES
+            dd03p_tab         = lt_dd03p
+          EXCEPTIONS
+            tabl_not_found    = 1
+            name_inconsistent = 2
+            tabl_inconsistent = 3
+            put_failure       = 4
+            put_refused       = 5
+            OTHERS            = 6.
+        IF sy-subrc <> 0.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ENDIF.
+
+        CALL FUNCTION 'DDIF_TABL_ACTIVATE'
+          EXPORTING
+            name        = lv_objname
+            auth_chk    = abap_false
+          IMPORTING
+            rc          = lv_rc
+          EXCEPTIONS
+            not_found   = 1
+            put_failure = 2
+            OTHERS      = 3.
+        IF sy-subrc <> 0 OR lv_rc <> 0.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ENDIF.
+
+        CLEAR lt_dd03p.
+
+
+      ENDIF.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
