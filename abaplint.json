@@ -151,7 +151,7 @@
         "unused_types": true,
         "use_bool_expression": true,
         "use_line_exists": true,
-        "check_subrc": true,
+        "check_subrc": false,
         "cyclomatic_complexity": false,
         "parser_missing_space": true,
         "identical_conditions": true,
