@@ -1,0 +1,31 @@
+TEXT - SYMBOLS:
+
+001	Please select scenario
+002	New solution test - chose data source
+003	Create test data - source
+004	New solution test - chose result to compare
+005	Create test data - result
+006	ABAP Class to compare - methods: end_routine, start_routine or expert_routine
+007	Load source data from variant
+008	Load result data from variant
+
+SELECTION-TEXT:
+
+PA_CTRFN	ABAP Class with new TRFN
+PA_LRDAT	Load own result data
+PA_LSDAT	Load own test data
+PA_NEW	Test new solution
+PA_OVN	Compare solutions
+PA_PTE	Performance test
+PA_ROWND	Create own result data
+PA_RTABL	DDIC Result table
+PA_RTABN	DDIC Result table
+PA_RTEMP	Template table
+PA_RVNAM	Result table variant name
+PA_SOWND	Create own test data
+PA_STABL	DDIC Source table
+PA_STABN	Table name
+PA_STEMP	Template table
+PA_STRFN	Source object of TRFN
+PA_SVNAM	Source table variant name
+PA_TTRFN	Target object of TRFN
