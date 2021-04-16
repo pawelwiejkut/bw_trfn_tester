@@ -8,8 +8,8 @@ REPORT zbw_trfn_tester_standalone.
 CLASS zcl_bw_trfn_tester_ui DEFINITION DEFERRED.
 CLASS zcl_bw_trfn_tester DEFINITION DEFERRED.
 CLASS zcx_bw_trfn_tester DEFINITION
-INHERITING FROM cx_static_check
-  PUBLIC
+  INHERITING FROM cx_static_check
+  FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
@@ -23,6 +23,10 @@ CLASS zcl_bw_trfn_tester DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
+    "! <p class="shorttext synchronized" lang="en"></p>
+    "! Create global DDIC Tables if not exists
+    CLASS-METHODS create_global_ddic.
 
     "! <p class="shorttext synchronized" lang="en"></p>
     "!
@@ -299,29 +303,53 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
 
     IF iv_svnam IS NOT INITIAL.
 
-      DATA: lt_var_tab  TYPE STANDARD TABLE OF zbwtrfn_var_type,
-            ls_var_tab  TYPE zbwtrfn_var_type,
-            lt_data_src TYPE STANDARD TABLE OF zbwtrfn_var_data,
-            ls_data_src TYPE zbwtrfn_var_data.
+      DATA: lr_dat_tab TYPE REF TO data,
+            lr_dat_str TYPE REF TO data,
+            lr_typ_tab TYPE REF TO data,
+            lr_typ_str TYPE REF TO data.
+
+      zcl_bw_trfn_tester=>create_global_ddic( ).
+
+      CREATE DATA lr_typ_tab  TYPE STANDARD TABLE OF ('ZBWTRFN_VAR_TYPE').
+      CREATE DATA lr_typ_str TYPE ('ZBWTRFN_VAR_TYPE').
+      CREATE DATA lr_dat_tab TYPE STANDARD TABLE OF ('ZBWTRFN_VAR_DAT').
+      CREATE DATA lr_dat_str TYPE ('ZBWTRFN_VAR_DAT').
+
+      FIELD-SYMBOLS: <lt_typ_tab> TYPE STANDARD TABLE,
+                     <ls_typ_tab> TYPE any,
+                     <lt_dat_tab> TYPE STANDARD TABLE,
+                     <ls_dat_tab> TYPE any.
+
+      ASSIGN lr_typ_tab->* TO <lt_typ_tab>.
+      ASSIGN lr_typ_str->* TO <ls_typ_tab>.
+      ASSIGN lr_dat_tab->* TO <lt_dat_tab>.
+      ASSIGN lr_dat_str->* TO <ls_dat_tab>.
 
       LOOP AT lt_type_result REFERENCE INTO DATA(lr_type_res_src).
 
-        ls_var_tab-template_table = iv_stemp.
-        ls_var_tab-variant = iv_svnam.
-        ls_var_tab-data_type = iv_type.
-        ls_var_tab-type = lr_type_res_src->input_inntype.
-        ls_var_tab-fieldnm = lr_type_res_src->input_name.
-        ls_var_tab-length =  lr_type_res_src->input_length.
-        ls_var_tab-decim =   lr_type_res_src->input_dec.
+        ASSIGN COMPONENT 'TEMPLATE_TABLE' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_template_table>).
+        <lv_template_table> = iv_stemp.
+        ASSIGN COMPONENT 'VARIANT' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_variant>).
+        <lv_variant> = iv_svnam.
+        ASSIGN COMPONENT 'DATA_TYPE' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_data_type>).
+        <lv_data_type> = iv_type.
+        ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_field_name>).
+        <lv_field_name> = lr_type_res_src->input_name.
+        ASSIGN COMPONENT 'LENGTH' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_length>).
+        <lv_length> = lr_type_res_src->input_length.
+        ASSIGN COMPONENT 'DECIM' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_decim>).
+        <lv_decim> = lr_type_res_src->input_dec.
+        ASSIGN COMPONENT 'TYPE' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_type>).
+        <lv_type> = lr_type_res_src->input_inntype.
 
-        APPEND ls_var_tab TO lt_var_tab.
+        APPEND <ls_typ_tab>  TO <lt_typ_tab> .
 
       ENDLOOP.
-
-      INSERT zbwtrfn_var_type FROM TABLE @lt_var_tab.
-      IF sy-subrc <> 0 .
-        MESSAGE 'Error during variant' TYPE 'E'.
-      ENDIF.
+      TRY.
+          INSERT ('ZBWTRFN_VAR_TYPE') FROM TABLE @<lt_typ_tab> .
+        CATCH cx_sy_open_sql_db.
+          MESSAGE 'Error during variant insert' TYPE 'E'.
+      ENDTRY.
 
       LOOP AT <lt_data_type> ASSIGNING FIELD-SYMBOL(<ls_data_type>).
         DATA(lv_rnr) = sy-tabix.
@@ -333,14 +361,19 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
           READ TABLE lt_type_result INDEX sy-index REFERENCE INTO lr_type_res_src.
 
           IF sy-subrc = 0.
-            ls_data_src-rownr = lv_rnr.
-            ls_data_src-template_table = iv_stemp.
-            ls_data_src-variant = iv_svnam.
-            ls_data_src-data_type = iv_type.
-            ls_data_src-fieldnm = lr_type_res_src->input_name.
-            ls_data_src-value = <ls_component>.
-
-            APPEND ls_data_src TO lt_data_src.
+            ASSIGN COMPONENT 'ROWNR' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_rownr>).
+            <lv_rownr> = lv_rnr.
+            ASSIGN COMPONENT 'TEMPLATE_TABLE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_temp_table>).
+            <lv_temp_table> = iv_stemp.
+            ASSIGN COMPONENT 'VARIANT' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_variant_d>).
+            <lv_variant_d> = iv_svnam.
+            ASSIGN COMPONENT 'DATA_TYPE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_dat_typ>).
+            <lv_dat_typ> = iv_type.
+            ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_FIELDNM>).
+            <lv_fieldnm> = lr_type_res_src->input_name.
+            ASSIGN COMPONENT 'VALUE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_VALUE>).
+            <lv_value> = <ls_component>.
+            APPEND  <ls_dat_tab> TO  <lt_dat_tab>.
 
           ENDIF.
 
@@ -348,7 +381,7 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
 
       ENDLOOP.
 
-      INSERT zbwtrfn_var_data FROM TABLE @lt_data_src.
+      INSERT ('ZBWTRFN_VAR_DAT') FROM TABLE @<lt_dat_tab>.
       IF sy-subrc <> 0.
         MESSAGE 'Error during assign' TYPE 'E'.
       ENDIF.
@@ -369,7 +402,28 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
           ls_comp          TYPE  cl_abap_structdescr=>component,
           lt_comp          TYPE cl_abap_structdescr=>component_table,
           lt_data_fcat_src TYPE  slis_t_fieldcat_alv,
-          lr_data_src      TYPE REF TO data.
+          lr_data_src      TYPE REF TO data,
+          lr_dat_tab       TYPE REF TO data,
+          lr_dat_str       TYPE REF TO data,
+          lr_typ_tab       TYPE REF TO data,
+          lr_typ_str       TYPE REF TO data.
+
+    zcl_bw_trfn_tester=>create_global_ddic( ).
+
+    CREATE DATA lr_typ_tab  TYPE STANDARD TABLE OF ('ZBWTRFN_VAR_TYPE').
+    CREATE DATA lr_typ_str TYPE ('ZBWTRFN_VAR_TYPE').
+    CREATE DATA lr_dat_tab TYPE STANDARD TABLE OF ('ZBWTRFN_VAR_DAT').
+    CREATE DATA lr_dat_str TYPE ('ZBWTRFN_VAR_DAT').
+
+    FIELD-SYMBOLS: <lt_typ_tab> TYPE STANDARD TABLE,
+                   <ls_typ_tab> TYPE any,
+                   <lt_dat_tab> TYPE STANDARD TABLE,
+                   <ls_dat_tab> TYPE any.
+
+    ASSIGN lr_typ_tab->* TO <lt_typ_tab>.
+    ASSIGN lr_typ_str->* TO <ls_typ_tab>.
+    ASSIGN lr_dat_tab->* TO <lt_dat_tab>.
+    ASSIGN lr_dat_str->* TO <ls_dat_tab>.
 
     FIELD-SYMBOLS:
         <lt_data_type> TYPE STANDARD TABLE.
@@ -383,21 +437,30 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
     DATA: lr_saved_str TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_saved_data> TYPE any.
+
+    zcl_bw_trfn_tester=>create_global_ddic( ).
+
     SELECT * FROM
-    zbwtrfn_var_type
-    INTO TABLE @DATA(lt_var_type)
+    ('ZBWTRFN_VAR_TYPE')
+    INTO TABLE @<lt_typ_tab>
     WHERE variant = @iv_svnam
     AND data_type = @iv_type.
     IF sy-subrc <> 0.
       MESSAGE 'Error during select' TYPE 'E'.
     ENDIF.
 
-    LOOP AT lt_var_type REFERENCE INTO DATA(lr_var_type).
-      ls_comp-name =  lr_var_type->fieldnm.
+    LOOP AT <lt_typ_tab> ASSIGNING <ls_typ_tab>.
+
+      ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_field_name>).
+      ASSIGN COMPONENT 'TYPE' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_type>).
+      ASSIGN COMPONENT 'LENGTH' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_length>).
+      ASSIGN COMPONENT 'DECIM' OF STRUCTURE <ls_typ_tab> TO FIELD-SYMBOL(<lv_decim>).
+
+      ls_comp-name =  <lv_field_name>.
       ls_comp-type = zcl_bw_trfn_tester=>create_type(
-                       iv_intype = CONV #( lr_var_type->type )
-                       iv_leng   = lr_var_type->length
-                       iv_decim  = lr_var_type->decim
+                       iv_intype = CONV #( <lv_type> )
+                       iv_leng   = <lv_length>
+                       iv_decim  = <lv_decim>
                      ) .
       APPEND ls_comp TO lt_comp.
     ENDLOOP.
@@ -426,31 +489,38 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
     ENDIF.
 
     SELECT * FROM
-    zbwtrfn_var_data
-    INTO TABLE @DATA(lt_var_data)
+    ('ZBWTRFN_VAR_DAT')
+    INTO TABLE @<lt_dat_tab>
     WHERE variant = @iv_svnam
     AND data_type = @iv_type.
     IF sy-subrc <> 0.
       MESSAGE 'Error during variant select' TYPE 'E'.
     ENDIF.
 
-    LOOP AT lt_var_data REFERENCE INTO DATA(lr_var_group) GROUP BY lr_var_group->rownr.
+    DATA(lv_groupby) = 'ROWNR'.
 
-      LOOP AT GROUP lr_var_group REFERENCE INTO DATA(lr_var_data).
+    LOOP AT <lt_dat_tab> ASSIGNING FIELD-SYMBOL(<ls_group>) GROUP BY lv_groupby.
 
-        ASSIGN COMPONENT lr_var_data->fieldnm OF STRUCTURE <ls_saved_data> TO FIELD-SYMBOL(<ls_field>).
+      LOOP AT GROUP <ls_group> ASSIGNING <ls_dat_tab>.
+
+        ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_fieldnm>).
+        ASSIGN COMPONENT 'ROWNR' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_rownr>).
+        ASSIGN COMPONENT 'VALUE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_VALUE>).
+
+        ASSIGN COMPONENT <lv_fieldnm> OF STRUCTURE <ls_saved_data> TO FIELD-SYMBOL(<ls_field>).
         IF sy-subrc <> 0.
           MESSAGE 'Error during type select' TYPE 'E'.
         ENDIF.
-        <ls_field> = lr_var_data->value.
+        <ls_field> = <lv_VALUE>.
 
-        IF lr_var_group->rownr = 1.
+        IF <lv_rownr> = 1.
           lt_data_fcat_src = VALUE #(
            BASE lt_data_fcat_src (
-           seltext_m = lr_var_data->fieldnm
-           fieldname = to_upper( lr_var_data->fieldnm )
+           seltext_m = <lv_fieldnm>
+           fieldname = to_upper( <lv_fieldnm> )
            edit = abap_true ) ).
         ENDIF.
+
       ENDLOOP.
 
       APPEND <ls_saved_data> TO <lt_data_type>.
@@ -752,12 +822,12 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
   METHOD compare_trfn_to_user_table.
 
-    DATA: lv_where           TYPE string,
-          lv_no_changes      TYPE flag,
-          lr_trfn_no_tech    TYPE REF TO data,
-          lr_user_result     TYPE REF TO data,
-          ls_comp            TYPE  cl_abap_structdescr=>component,
-          lt_comp            TYPE cl_abap_structdescr=>component_table.
+    DATA: lv_where        TYPE string,
+          lv_no_changes   TYPE flag,
+          lr_trfn_no_tech TYPE REF TO data,
+          lr_user_result  TYPE REF TO data,
+          ls_comp         TYPE  cl_abap_structdescr=>component,
+          lt_comp         TYPE cl_abap_structdescr=>component_table.
 
     FIELD-SYMBOLS: <lt_user_result>  TYPE STANDARD TABLE,
                    <lt_no_tech_trfn> TYPE STANDARD TABLE,
@@ -879,6 +949,8 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
   METHOD create_type.
 
+  data(lv_plength) = ( conv int4( iv_leng ) + 1 ) / 2.
+
     rv_type = COND #(
         WHEN iv_intype = 'STRING'  THEN cl_abap_elemdescr=>get_string( )
         WHEN iv_intype = 'XSTRING' THEN cl_abap_elemdescr=>get_xstring( )
@@ -889,8 +961,144 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
         WHEN iv_intype = 'C' THEN cl_abap_elemdescr=>get_c( p_length = CONV #( iv_leng ) )
         WHEN iv_intype = 'N' THEN cl_abap_elemdescr=>get_n( p_length = CONV #( iv_leng  ) )
         WHEN iv_intype = 'X' THEN cl_abap_elemdescr=>get_x( p_length = CONV #( iv_leng  ) )
-        WHEN iv_intype = 'P' THEN cl_abap_elemdescr=>get_p( p_length = CONV #( iv_leng  )
+        WHEN iv_intype = 'P' THEN cl_abap_elemdescr=>get_p( p_length = CONV #( lv_plength  )
                                                           p_decimals = CONV #( iv_decim ) ) ).
+
+  ENDMETHOD.
+
+  METHOD create_global_ddic.
+
+    TYPES: BEGIN OF t_tables,
+             tablename TYPE string.
+             INCLUDE   TYPE dd03p.
+    TYPES: END OF t_tables.
+
+    TYPES: t_ty_tables TYPE STANDARD TABLE OF t_tables WITH EMPTY KEY.
+
+    DATA: lv_objname  TYPE ddobjname,
+          lv_rc       LIKE sy-subrc,
+          lv_obj_name TYPE tadir-obj_name,
+          ls_dd02v    TYPE dd02v,
+          ls_dd09l    TYPE dd09l,
+          lv_exist    TYPE abap_bool,
+          lt_dd03p    TYPE STANDARD TABLE OF dd03p WITH EMPTY KEY.
+
+    FIELD-SYMBOLS: <ls_dd03p> LIKE LINE OF lt_dd03p.
+
+    DATA(lt_tables) = VALUE t_ty_tables(
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'CLNT' position ='0001'
+    keyflag = abap_true datatype = 'CHAR' leng = '000003' )
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'VARIANT' position ='0002'
+    keyflag = abap_true datatype = 'CHAR' leng = '000030' )
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'TEMPLATE_TABLE' position ='0003'
+    keyflag = abap_true datatype = 'CHAR' leng = '000030' )
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'DATA_TYPE' position ='0004'
+    keyflag = abap_true datatype = 'CHAR' leng = '000010' )
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'FIELDNM' position ='0005'
+    keyflag = abap_true datatype = 'CHAR' leng = '000030' )
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'ROWNR' position ='0006'
+    keyflag = abap_true datatype = 'INT4' leng = '10' )
+    ( tablename = 'ZBWTRFN_VAR_DAT' fieldname = 'VALUE' position ='0007'
+    keyflag = abap_false datatype = 'CHAR' leng = '255' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'CLNT' position ='0001'
+    keyflag = abap_true datatype = 'CHAR' leng = '000003' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'VARIANT' position ='0002'
+    keyflag = abap_true datatype = 'CHAR' leng = '000030' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'TEMPLATE_TABLE' position ='0003'
+    keyflag = abap_true datatype = 'CHAR' leng = '000030' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'DATA_TYPE' position ='0004'
+    keyflag = abap_true datatype = 'CHAR' leng = '000010' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'LENGTH' position ='0005'
+    keyflag = abap_true datatype = 'NUMC' leng = '000006' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'DECIM' position ='0006'
+    keyflag = abap_true datatype = 'NUMC' leng = '000006' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'FIELDNM' position ='0007'
+    keyflag = abap_true datatype = 'CHAR' leng = '000030' )
+    ( tablename = 'ZBWTRFN_VAR_TYPE' fieldname = 'TYPE' position ='0008'
+    keyflag = abap_true datatype = 'CHAR' leng = '000001' ) ).
+    LOOP AT lt_tables REFERENCE INTO DATA(lr_tables) GROUP BY lr_tables->tablename
+    REFERENCE INTO DATA(lr_table_gropup).
+
+      LOOP AT GROUP lr_table_gropup REFERENCE INTO DATA(lr_table).
+
+        CLEAR lv_exist.
+
+        IF sy-index = 0.
+
+          ls_dd09l-tabname  = lr_table->tablename.
+          ls_dd09l-as4local = 'A'.
+          ls_dd09l-tabkat   = '1'.
+          ls_dd09l-tabart   = 'APPL1'.
+          ls_dd09l-bufallow = 'N'.
+
+          ls_dd02v-tabname    = lr_table->tablename.
+          ls_dd02v-ddlanguage = 'E'.
+          ls_dd02v-tabclass   = 'TRANSP'.
+          ls_dd02v-ddtext     = 'Generated by ZBW TRFN Tester'.
+          ls_dd02v-contflag   = 'L'.
+          ls_dd02v-exclass    = '1'.
+        ENDIF.
+
+        SELECT SINGLE @abap_true ##SUBRC_OK
+        FROM dd02l
+        INTO @lv_exist
+        WHERE   tabname = @lr_table->tablename
+        AND     as4local  = 'A'.
+
+        CHECK lv_exist = abap_false.
+
+        lv_objname = lr_table->tablename.
+
+        APPEND INITIAL LINE TO lt_dd03p ASSIGNING <ls_dd03p>.
+        <ls_dd03p>-tabname   = lr_table->tablename.
+        <ls_dd03p>-fieldname = lr_table->fieldname.
+        <ls_dd03p>-position  = lr_table->position.
+        <ls_dd03p>-keyflag   = lr_table->keyflag.
+        <ls_dd03p>-datatype  = lr_table->datatype.
+        <ls_dd03p>-leng      = lr_table->leng.
+
+      ENDLOOP.
+
+      IF lv_exist = abap_false.
+
+        CALL FUNCTION 'DDIF_TABL_PUT'
+          EXPORTING
+            name              = lv_objname
+            dd02v_wa          = ls_dd02v
+            dd09l_wa          = ls_dd09l
+          TABLES
+            dd03p_tab         = lt_dd03p
+          EXCEPTIONS
+            tabl_not_found    = 1
+            name_inconsistent = 2
+            tabl_inconsistent = 3
+            put_failure       = 4
+            put_refused       = 5
+            OTHERS            = 6.
+        IF sy-subrc <> 0.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ENDIF.
+
+        CALL FUNCTION 'DDIF_TABL_ACTIVATE'
+          EXPORTING
+            name        = lv_objname
+            auth_chk    = abap_false
+          IMPORTING
+            rc          = lv_rc
+          EXCEPTIONS
+            not_found   = 1
+            put_failure = 2
+            OTHERS      = 3.
+        IF sy-subrc <> 0 OR lv_rc <> 0.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ENDIF.
+
+        CLEAR lt_dd03p.
+      ENDIF.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -1152,6 +1360,6 @@ END-OF-SELECTION.
 
 ****************************************************
 INTERFACE lif_abapmerge_marker.
-* abapmerge 0.14.3 - 2021-04-16T20:09:43.230Z
+* abapmerge 0.14.3 - 2021-04-16T20:17:02.628Z
 ENDINTERFACE.
 ****************************************************
