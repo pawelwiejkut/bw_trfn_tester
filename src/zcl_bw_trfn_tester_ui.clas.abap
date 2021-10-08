@@ -33,6 +33,15 @@ CLASS zcl_bw_trfn_tester_ui DEFINITION
                   iv_repid           TYPE sy-repid
         RETURNING VALUE(er_data_pkg) TYPE REF TO data.
 
+    CLASS-METHODS:
+      "! <p class="shorttext synchronized" lang="en"></p>
+      "! Show table with different values
+      "! @parameter ir_user_result | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter ir_trfn_result | <p class="shorttext synchronized" lang="en"></p>
+      show_differences
+        IMPORTING ir_user_result TYPE REF TO data
+                  ir_trfn_result TYPE REF TO data.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -442,6 +451,16 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
     ENDIF.
 
     er_data_pkg = lr_data_src.
+
+  ENDMETHOD.
+
+  METHOD show_differences.
+
+    FIELD-SYMBOLS: <lt_user_result> TYPE STANDARD TABLE,
+                   <lt_trfn_result> TYPE STANDARD TABLE.
+
+    ASSIGN ir_trfn_result->* TO <lt_trfn_result>.
+    ASSIGN ir_user_result->* TO <lt_user_result>.
 
   ENDMETHOD.
 
