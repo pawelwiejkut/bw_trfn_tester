@@ -146,6 +146,15 @@ CLASS zcl_bw_trfn_tester_ui DEFINITION
                   iv_repid           TYPE sy-repid
         RETURNING VALUE(er_data_pkg) TYPE REF TO data.
 
+    CLASS-METHODS:
+      "! <p class="shorttext synchronized" lang="en"></p>
+      "! Show table with different values
+      "! @parameter ir_user_result | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter ir_trfn_result | <p class="shorttext synchronized" lang="en"></p>
+      show_differences
+        IMPORTING ir_user_result TYPE REF TO data
+                  ir_trfn_result TYPE REF TO data.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -548,6 +557,16 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
     ENDIF.
 
     er_data_pkg = lr_data_src.
+
+  ENDMETHOD.
+
+  METHOD show_differences.
+
+    FIELD-SYMBOLS: <lt_user_result> TYPE STANDARD TABLE,
+                   <lt_trfn_result> TYPE STANDARD TABLE.
+
+    ASSIGN ir_trfn_result->* TO <lt_trfn_result>.
+    ASSIGN ir_user_result->* TO <lt_user_result>.
 
   ENDMETHOD.
 
@@ -1360,6 +1379,6 @@ END-OF-SELECTION.
 
 ****************************************************
 INTERFACE lif_abapmerge_marker.
-* abapmerge 0.14.3 - 2021-04-16T20:34:02.580Z
+* abapmerge 0.14.3 - 2021-10-08T19:52:13.854Z
 ENDINTERFACE.
 ****************************************************
