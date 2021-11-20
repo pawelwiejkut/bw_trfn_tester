@@ -14,9 +14,9 @@ SELECTION-TEXT:
 PA_CTRFN	ABAP Class with new TRFN
 PA_LRDAT	Load own result data
 PA_LSDAT	Load own test data
-PA_NEW	Test new solution
-PA_OVN	Compare solutions
-PA_PTE	Performance test
+PA_NEW	  Test new solution
+PA_OVN	  Compare solutions
+PA_PTE	  Performance test
 PA_RCTTB	Use table from TRFN result
 PA_ROWND	Create own result data
 PA_RTABL	DDIC Result table
