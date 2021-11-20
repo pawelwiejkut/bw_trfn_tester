@@ -352,7 +352,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
     DATA(lv_programid) = caluclate_program_id( ).
 
-    CONCATENATE '\PROGRAM=' lv_programid '\CLASS=LCL_TRANSFORM\TYPE=_TY_S_SC_1' INTO DATA(lv_src_trfn_str_type).
+    CONCATENATE '\PROGRAM=' lv_programid '\CLASS=LCL_TRANSFORM\TYPE=_ty_s_SC_1' INTO DATA(lv_src_trfn_str_type).
     CONCATENATE '\PROGRAM=' lv_programid '\CLASS=LCL_TRANSFORM\TYPE=_TY_S_TG_1' INTO DATA(lv_res_trfn_str_type).
     CONCATENATE '\PROGRAM=' lv_programid '\CLASS=LCL_TRANSFORM\TYPE=_TY_T_SC_1' INTO DATA(lv_src_trfn_tab_type).
 
@@ -480,6 +480,12 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
     SORT <lt_user_result>.
     SORT <lt_no_tech_trfn>.
 
+    cl_demo_output=>display(
+      EXPORTING
+        data = <lt_no_tech_trfn>
+        name = 'Result'
+    ).
+
     CALL FUNCTION 'CTVB_COMPARE_TABLES_3'
       EXPORTING
         it_table_old  = <lt_user_result>
@@ -502,7 +508,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
   METHOD create_type.
 
-  data(lv_plength) = ( conv int4( iv_leng ) + 1 ) / 2.
+    DATA(lv_plength) = ( CONV int4( iv_leng ) + 1 ) / 2.
 
     rv_type = COND #(
         WHEN iv_intype = 'STRING'  THEN cl_abap_elemdescr=>get_string( )
@@ -524,7 +530,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
     TYPES: BEGIN OF t_tables,
              tablename TYPE string.
              INCLUDE   TYPE dd03p.
-    TYPES: END OF t_tables.
+           TYPES: END OF t_tables.
 
     TYPES: t_ty_tables TYPE STANDARD TABLE OF t_tables WITH EMPTY KEY.
 

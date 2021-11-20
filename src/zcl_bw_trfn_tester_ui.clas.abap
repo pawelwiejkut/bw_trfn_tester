@@ -12,12 +12,20 @@ CLASS zcl_bw_trfn_tester_ui DEFINITION
       "! @parameter iv_svnam | <p class="shorttext synchronized" lang="en"></p>
       "! @parameter iv_repid | <p class="shorttext synchronized" lang="en"></p>
       "! @parameter iv_type | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter iv_ttrfn | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter iv_strfn | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter iv_scttb | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter iv_ttttb  | <p class="shorttext synchronized" lang="en"></p>
       "! @parameter er_data_pkg | <p class="shorttext synchronized" lang="en"></p>
       create_data_package
         IMPORTING iv_stemp           TYPE tabname
                   iv_svnam           TYPE char20
                   iv_repid           TYPE sy-repid
                   iv_type            TYPE char3
+                  iv_ttrfn           TYPE sobj_name
+                  iv_strfn           TYPE sobj_name
+                  iv_scttb           TYPE abap_bool
+                  iv_ttttb           TYPE abap_bool
         RETURNING VALUE(er_data_pkg) TYPE REF TO data.
 
     CLASS-METHODS:
@@ -62,7 +70,10 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
           ls_comp          TYPE cl_abap_structdescr=>component,
           lt_comp          TYPE cl_abap_structdescr=>component_table,
           lt_data_fcat_src TYPE slis_t_fieldcat_alv,
-          lr_data_src      TYPE REF TO data.
+          lr_data_src      TYPE REF TO data,
+          lr_src_str_trfn  TYPE REF TO data,
+          lr_res_str_trfn  TYPE REF TO data,
+          lr_src_tab_trfn  TYPE REF TO data.
 
     FIELD-SYMBOLS:
         <lt_data_type> TYPE STANDARD TABLE.
@@ -73,8 +84,60 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
 
     UNASSIGN <lt_data_type>.
 
+    IF iv_scttb = abap_true AND iv_type = 'SRC' OR iv_ttttb = abap_true AND iv_type = 'RES'.
 
-    IF iv_stemp IS NOT INITIAL.
+      SELECT SINGLE tranid
+      FROM rstran
+      INTO @DATA(lv_trfn_id)
+      WHERE sourcename = @iv_strfn
+      AND targetname = @iv_ttrfn
+      AND objvers = 'A'
+      AND objstat = 'ACT'.
+
+      TRY.
+          DATA(lobj_rstran_miantain) = NEW cl_rstran_maintain(
+                                           i_tranid = lv_trfn_id ).
+        CATCH cx_rstran_not_found.
+        CATCH cx_rstran_input_invalid.
+        CATCH cx_rstran_cancelled.
+        CATCH cx_rstran_not_authorized.
+        CATCH cx_rstran_already_exist.
+        CATCH cx_rstran_display_only.
+        CATCH cx_rstran_error_with_message.
+      ENDTRY.
+
+      lobj_rstran_miantain->get_progid( IMPORTING e_progid = DATA(lv_progid) ).
+
+      CONCATENATE '\PROGRAM=GP' lv_progid '\CLASS=LCL_TRANSFORM\TYPE=_TY_S_SC_1' INTO DATA(lv_src_trfn_str_type).
+      CONCATENATE '\PROGRAM=GP' lv_progid '\CLASS=LCL_TRANSFORM\TYPE=_TY_S_TG_1' INTO DATA(lv_res_trfn_str_type).
+
+      CREATE DATA lr_src_str_trfn TYPE (lv_src_trfn_str_type).
+      CREATE DATA lr_res_str_trfn TYPE (lv_res_trfn_str_type).
+
+      FIELD-SYMBOLS:<ls_type> TYPE any.
+
+      ASSIGN lr_src_str_trfn->* TO <ls_type>.
+
+      DESCRIBE FIELD <ls_type> TYPE DATA(typ1) COMPONENTS DATA(comp1).
+
+      DATA : lt_tabdescr    TYPE abap_compdescr_tab,
+             lr_table_descr TYPE REF TO cl_abap_structdescr.
+
+      IF iv_type = 'SRC'.
+        lr_table_descr ?=  cl_abap_typedescr=>describe_by_data_ref( lr_src_str_trfn ).
+      ELSEIF iv_type = 'RES'.
+        lr_table_descr ?=  cl_abap_typedescr=>describe_by_data_ref( lr_res_str_trfn ).
+      ENDIF.
+
+      lt_tabdescr[] = lr_table_descr->components[].
+
+      lt_type_result = CORRESPONDING #( lt_tabdescr MAPPING input_dec = decimals
+                                                            input_inntype = type_kind
+                                                            input_length = length
+                                                            input_name = name ).
+
+    ELSEIF iv_stemp IS NOT INITIAL.
+
       SELECT fieldname, rollname, leng, decimals,inttype
       FROM dd03l
       INTO TABLE @DATA(lt_dd03l)
@@ -270,9 +333,9 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
             <lv_variant_d> = iv_svnam.
             ASSIGN COMPONENT 'DATA_TYPE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_dat_typ>).
             <lv_dat_typ> = iv_type.
-            ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_FIELDNM>).
+            ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_fieldnm>).
             <lv_fieldnm> = lr_type_res_src->input_name.
-            ASSIGN COMPONENT 'VALUE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_VALUE>).
+            ASSIGN COMPONENT 'VALUE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_value>).
             <lv_value> = <ls_component>.
 
 
@@ -408,13 +471,13 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
 
         ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_fieldnm>).
         ASSIGN COMPONENT 'ROWNR' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_rownr>).
-        ASSIGN COMPONENT 'VALUE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_VALUE>).
+        ASSIGN COMPONENT 'VALUE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_value>).
 
         ASSIGN COMPONENT <lv_fieldnm> OF STRUCTURE <ls_saved_data> TO FIELD-SYMBOL(<ls_field>).
         IF sy-subrc <> 0.
           MESSAGE 'Error during type select' TYPE 'E'.
         ENDIF.
-        <ls_field> = <lv_VALUE>.
+        <ls_field> = <lv_value>.
 
         IF <lv_rownr> = 1.
           lt_data_fcat_src = VALUE #(

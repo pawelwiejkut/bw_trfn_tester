@@ -102,6 +102,12 @@
     </item>
     <item>
      <ID>S</ID>
+     <KEY>PA_RCTTB</KEY>
+     <ENTRY>Use table from TRFN result</ENTRY>
+     <LENGTH>34</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
      <KEY>PA_ROWND</KEY>
      <ENTRY>Create own result data</ENTRY>
      <LENGTH>30</LENGTH>
@@ -129,6 +135,12 @@
      <KEY>PA_RVNAM</KEY>
      <ENTRY>Result table variant name</ENTRY>
      <LENGTH>33</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>PA_SCTTB</KEY>
+     <ENTRY>Use table from TRFN source</ENTRY>
+     <LENGTH>34</LENGTH>
     </item>
     <item>
      <ID>S</ID>
