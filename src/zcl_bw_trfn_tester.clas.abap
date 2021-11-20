@@ -481,7 +481,6 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
     SORT <lt_no_tech_trfn>.
 
     cl_demo_output=>display(
-      EXPORTING
         data = <lt_no_tech_trfn>
         name = 'Result'
     ).
