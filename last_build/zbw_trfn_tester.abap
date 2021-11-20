@@ -125,12 +125,20 @@ CLASS zcl_bw_trfn_tester_ui DEFINITION
       "! @parameter iv_svnam | <p class="shorttext synchronized" lang="en"></p>
       "! @parameter iv_repid | <p class="shorttext synchronized" lang="en"></p>
       "! @parameter iv_type | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter iv_ttrfn | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter iv_strfn | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter iv_scttb | <p class="shorttext synchronized" lang="en"></p>
+      "! @parameter iv_ttttb  | <p class="shorttext synchronized" lang="en"></p>
       "! @parameter er_data_pkg | <p class="shorttext synchronized" lang="en"></p>
       create_data_package
         IMPORTING iv_stemp           TYPE tabname
                   iv_svnam           TYPE char20
                   iv_repid           TYPE sy-repid
                   iv_type            TYPE char3
+                  iv_ttrfn           TYPE sobj_name
+                  iv_strfn           TYPE sobj_name
+                  iv_scttb           TYPE abap_bool
+                  iv_ttttb           TYPE abap_bool
         RETURNING VALUE(er_data_pkg) TYPE REF TO data.
 
     CLASS-METHODS:
@@ -174,7 +182,10 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
           ls_comp          TYPE cl_abap_structdescr=>component,
           lt_comp          TYPE cl_abap_structdescr=>component_table,
           lt_data_fcat_src TYPE slis_t_fieldcat_alv,
-          lr_data_src      TYPE REF TO data.
+          lr_data_src      TYPE REF TO data,
+          lr_src_str_trfn  TYPE REF TO data,
+          lr_res_str_trfn  TYPE REF TO data,
+          lr_src_tab_trfn  TYPE REF TO data.
 
     FIELD-SYMBOLS:
         <lt_data_type> TYPE STANDARD TABLE.
@@ -184,7 +195,61 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
     FREE: lr_data_src.
 
     UNASSIGN <lt_data_type>.
-    IF iv_stemp IS NOT INITIAL.
+
+    IF iv_scttb = abap_true AND iv_type = 'SRC' OR iv_ttttb = abap_true AND iv_type = 'RES'.
+
+      SELECT SINGLE tranid
+      FROM rstran
+      INTO @DATA(lv_trfn_id)
+      WHERE sourcename = @iv_strfn
+      AND targetname = @iv_ttrfn
+      AND objvers = 'A'
+      AND objstat = 'ACT'.
+
+      TRY.
+          DATA(lobj_rstran_miantain) = NEW cl_rstran_maintain(
+                                           i_tranid = lv_trfn_id ).
+        CATCH cx_rstran_not_found.
+        CATCH cx_rstran_input_invalid.
+        CATCH cx_rstran_cancelled.
+        CATCH cx_rstran_not_authorized.
+        CATCH cx_rstran_already_exist.
+        CATCH cx_rstran_display_only.
+        CATCH cx_rstran_error_with_message.
+      ENDTRY.
+
+      lobj_rstran_miantain->get_progid( IMPORTING e_progid = DATA(lv_progid) ).
+
+      CONCATENATE '\PROGRAM=GP' lv_progid '\CLASS=LCL_TRANSFORM\TYPE=_TY_S_SC_1' INTO DATA(lv_src_trfn_str_type).
+      CONCATENATE '\PROGRAM=GP' lv_progid '\CLASS=LCL_TRANSFORM\TYPE=_TY_S_TG_1' INTO DATA(lv_res_trfn_str_type).
+
+      CREATE DATA lr_src_str_trfn TYPE (lv_src_trfn_str_type).
+      CREATE DATA lr_res_str_trfn TYPE (lv_res_trfn_str_type).
+
+      FIELD-SYMBOLS:<ls_type> TYPE any.
+
+      ASSIGN lr_src_str_trfn->* TO <ls_type>.
+
+      DESCRIBE FIELD <ls_type> TYPE DATA(typ1) COMPONENTS DATA(comp1).
+
+      DATA : lt_tabdescr    TYPE abap_compdescr_tab,
+             lr_table_descr TYPE REF TO cl_abap_structdescr.
+
+      IF iv_type = 'SRC'.
+        lr_table_descr ?=  cl_abap_typedescr=>describe_by_data_ref( lr_src_str_trfn ).
+      ELSEIF iv_type = 'RES'.
+        lr_table_descr ?=  cl_abap_typedescr=>describe_by_data_ref( lr_res_str_trfn ).
+      ENDIF.
+
+      lt_tabdescr[] = lr_table_descr->components[].
+
+      lt_type_result = CORRESPONDING #( lt_tabdescr MAPPING input_dec = decimals
+                                                            input_inntype = type_kind
+                                                            input_length = length
+                                                            input_name = name ).
+
+    ELSEIF iv_stemp IS NOT INITIAL.
+
       SELECT fieldname, rollname, leng, decimals,inttype
       FROM dd03l
       INTO TABLE @DATA(lt_dd03l)
@@ -378,9 +443,9 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
             <lv_variant_d> = iv_svnam.
             ASSIGN COMPONENT 'DATA_TYPE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_dat_typ>).
             <lv_dat_typ> = iv_type.
-            ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_FIELDNM>).
+            ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_fieldnm>).
             <lv_fieldnm> = lr_type_res_src->input_name.
-            ASSIGN COMPONENT 'VALUE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_VALUE>).
+            ASSIGN COMPONENT 'VALUE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_value>).
             <lv_value> = <ls_component>.
             APPEND  <ls_dat_tab> TO  <lt_dat_tab>.
 
@@ -514,13 +579,13 @@ CLASS zcl_bw_trfn_tester_ui IMPLEMENTATION.
 
         ASSIGN COMPONENT 'FIELDNM' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_fieldnm>).
         ASSIGN COMPONENT 'ROWNR' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_rownr>).
-        ASSIGN COMPONENT 'VALUE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_VALUE>).
+        ASSIGN COMPONENT 'VALUE' OF STRUCTURE <ls_dat_tab> TO FIELD-SYMBOL(<lv_value>).
 
         ASSIGN COMPONENT <lv_fieldnm> OF STRUCTURE <ls_saved_data> TO FIELD-SYMBOL(<ls_field>).
         IF sy-subrc <> 0.
           MESSAGE 'Error during type select' TYPE 'E'.
         ENDIF.
-        <ls_field> = <lv_VALUE>.
+        <ls_field> = <lv_value>.
 
         IF <lv_rownr> = 1.
           lt_data_fcat_src = VALUE #(
@@ -822,7 +887,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
     DATA(lv_programid) = caluclate_program_id( ).
 
-    CONCATENATE '\PROGRAM=' lv_programid '\CLASS=LCL_TRANSFORM\TYPE=_TY_S_SC_1' INTO DATA(lv_src_trfn_str_type).
+    CONCATENATE '\PROGRAM=' lv_programid '\CLASS=LCL_TRANSFORM\TYPE=_ty_s_SC_1' INTO DATA(lv_src_trfn_str_type).
     CONCATENATE '\PROGRAM=' lv_programid '\CLASS=LCL_TRANSFORM\TYPE=_TY_S_TG_1' INTO DATA(lv_res_trfn_str_type).
     CONCATENATE '\PROGRAM=' lv_programid '\CLASS=LCL_TRANSFORM\TYPE=_TY_T_SC_1' INTO DATA(lv_src_trfn_tab_type).
 
@@ -946,6 +1011,11 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
     SORT <lt_user_result>.
     SORT <lt_no_tech_trfn>.
 
+    cl_demo_output=>display(
+        data = <lt_no_tech_trfn>
+        name = 'Result'
+    ).
+
     CALL FUNCTION 'CTVB_COMPARE_TABLES_3'
       EXPORTING
         it_table_old  = <lt_user_result>
@@ -968,7 +1038,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
 
   METHOD create_type.
 
-  data(lv_plength) = ( conv int4( iv_leng ) + 1 ) / 2.
+    DATA(lv_plength) = ( CONV int4( iv_leng ) + 1 ) / 2.
 
     rv_type = COND #(
         WHEN iv_intype = 'STRING'  THEN cl_abap_elemdescr=>get_string( )
@@ -990,7 +1060,7 @@ CLASS zcl_bw_trfn_tester IMPLEMENTATION.
     TYPES: BEGIN OF t_tables,
              tablename TYPE string.
              INCLUDE   TYPE dd03p.
-    TYPES: END OF t_tables.
+           TYPES: END OF t_tables.
 
     TYPES: t_ty_tables TYPE STANDARD TABLE OF t_tables WITH EMPTY KEY.
 
@@ -1133,54 +1203,56 @@ TYPES: END OF ty_type_input.
 DATA: lr_data_src TYPE REF TO data,
       lr_data_res TYPE REF TO data.
 
-PARAMETERS: pa_strfn TYPE rstran-sourcename,
-            pa_ttrfn TYPE rstran-targetname.
+PARAMETERS: pa_strfn TYPE rstran-sourcename OBLIGATORY,
+            pa_ttrfn TYPE rstran-targetname OBLIGATORY.
 SELECTION-SCREEN SKIP.
 
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-001.
-  PARAMETERS:
-    pa_new RADIOBUTTON GROUP rgr1 USER-COMMAND uc1 DEFAULT 'X',
-    pa_ovn RADIOBUTTON GROUP rgr1,
-    pa_pte RADIOBUTTON GROUP rgr1.
+PARAMETERS:
+  pa_new RADIOBUTTON GROUP rgr1 USER-COMMAND uc1 DEFAULT 'X',
+  pa_ovn RADIOBUTTON GROUP rgr1,
+  pa_pte RADIOBUTTON GROUP rgr1.
 SELECTION-SCREEN END OF BLOCK b1.
 SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE TEXT-002 .
-  PARAMETERS:
-    pa_stabl RADIOBUTTON GROUP rgr2 MODIF ID g1 USER-COMMAND uc2 DEFAULT 'X',
-    pa_sownd RADIOBUTTON GROUP rgr2 MODIF ID g1,
-    pa_lsdat RADIOBUTTON GROUP rgr2 MODIF ID g1.
+PARAMETERS:
+  pa_scttb RADIOBUTTON GROUP rgr2 MODIF ID g1 USER-COMMAND uc2 DEFAULT 'X',
+  pa_stabl RADIOBUTTON GROUP rgr2 MODIF ID g1,
+  pa_sownd RADIOBUTTON GROUP rgr2 MODIF ID g1,
+  pa_lsdat RADIOBUTTON GROUP rgr2 MODIF ID g1.
 
-  PARAMETERS: pa_stabn TYPE dd02l-tabname MODIF ID g12.
-  PARAMETERS: pa_stemp TYPE dd02l-tabname MODIF ID g13.
-  PARAMETERS: pa_svnam TYPE char20 MODIF ID g17.
-  SELECTION-SCREEN BEGIN OF LINE.
-    SELECTION-SCREEN PUSHBUTTON (25) TEXT-003 USER-COMMAND create_input MODIF ID g13.
-  SELECTION-SCREEN END OF LINE.
+PARAMETERS: pa_stabn TYPE dd02l-tabname MODIF ID g12.
+PARAMETERS: pa_stemp TYPE dd02l-tabname MODIF ID g20.
+PARAMETERS: pa_svnam TYPE char20 MODIF ID g17.
+SELECTION-SCREEN BEGIN OF LINE.
+SELECTION-SCREEN PUSHBUTTON (25) TEXT-003 USER-COMMAND create_input MODIF ID g13.
+SELECTION-SCREEN END OF LINE.
 
-  SELECTION-SCREEN BEGIN OF LINE.
-    SELECTION-SCREEN PUSHBUTTON (29) TEXT-007 USER-COMMAND load_input MODIF ID g16.
-  SELECTION-SCREEN END OF LINE.
+SELECTION-SCREEN BEGIN OF LINE.
+SELECTION-SCREEN PUSHBUTTON (29) TEXT-007 USER-COMMAND load_input MODIF ID g16.
+SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN END OF BLOCK b2.
 SELECTION-SCREEN BEGIN OF BLOCK b3 WITH FRAME TITLE TEXT-004 .
-  PARAMETERS:
-    pa_rtabl RADIOBUTTON GROUP rgr3 MODIF ID g3 USER-COMMAND uc3 DEFAULT 'X',
-    pa_rownd RADIOBUTTON GROUP rgr3 MODIF ID g3,
-    pa_lrdat RADIOBUTTON GROUP rgr3 MODIF ID g3.
+PARAMETERS:
+  pa_rcttb RADIOBUTTON GROUP rgr3 MODIF ID g3 USER-COMMAND uc3 DEFAULT 'X',
+  pa_rtabl RADIOBUTTON GROUP rgr3 MODIF ID g3,
+  pa_rownd RADIOBUTTON GROUP rgr3 MODIF ID g3,
+  pa_lrdat RADIOBUTTON GROUP rgr3 MODIF ID g3.
 
-  PARAMETERS: pa_rtabn TYPE dd02l-tabname MODIF ID g14.
-  PARAMETERS: pa_rtemp TYPE dd02l-tabname MODIF ID g15.
-  PARAMETERS: pa_rvnam TYPE char20 MODIF ID g19.
-  SELECTION-SCREEN BEGIN OF LINE.
-    SELECTION-SCREEN PUSHBUTTON (25) TEXT-005 USER-COMMAND create_result MODIF ID g15.
-  SELECTION-SCREEN END OF LINE.
+PARAMETERS: pa_rtabn TYPE dd02l-tabname MODIF ID g14.
+PARAMETERS: pa_rtemp TYPE dd02l-tabname MODIF ID g21.
+PARAMETERS: pa_rvnam TYPE char20 MODIF ID g19.
+SELECTION-SCREEN BEGIN OF LINE.
+SELECTION-SCREEN PUSHBUTTON (25) TEXT-005 USER-COMMAND create_result MODIF ID g15.
+SELECTION-SCREEN END OF LINE.
 
-  SELECTION-SCREEN BEGIN OF LINE.
-    SELECTION-SCREEN PUSHBUTTON (29) TEXT-008 USER-COMMAND load_result MODIF ID g18.
-  SELECTION-SCREEN END OF LINE.
+SELECTION-SCREEN BEGIN OF LINE.
+SELECTION-SCREEN PUSHBUTTON (29) TEXT-008 USER-COMMAND load_result MODIF ID g18.
+SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN END OF BLOCK b3.
 
 SELECTION-SCREEN BEGIN OF BLOCK b4 WITH FRAME TITLE TEXT-006 .
-  PARAMETERS:
-    pa_ctrfn TYPE string MODIF ID g2.
+PARAMETERS:
+  pa_ctrfn TYPE string MODIF ID g2.
 SELECTION-SCREEN END OF BLOCK b4.
 
 AT SELECTION-SCREEN.
@@ -1191,14 +1263,22 @@ AT SELECTION-SCREEN.
       lr_data_src = zcl_bw_trfn_tester_ui=>create_data_package(
            iv_stemp    = pa_stemp
            iv_svnam    = pa_svnam
+           iv_ttrfn    = pa_ttrfn
+           iv_strfn    = pa_strfn
            iv_repid    = sy-repid
+           iv_scttb    = pa_scttb
+           iv_ttttb    = pa_rcttb
            iv_type     = 'SRC' ).
 
     WHEN  'CREATE_RESULT'.
       lr_data_res = zcl_bw_trfn_tester_ui=>create_data_package(
           iv_stemp    = pa_rtemp
           iv_svnam    = pa_rvnam
+          iv_ttrfn    = pa_ttrfn
+          iv_strfn    = pa_strfn
           iv_repid    = sy-repid
+          iv_scttb    = pa_scttb
+          iv_ttttb    = pa_rcttb
           iv_type     = 'RES' ).
 
     WHEN  'LOAD_INPUT'.
@@ -1235,6 +1315,12 @@ AT SELECTION-SCREEN OUTPUT.
 
   LOOP AT SCREEN.
 
+    IF screen-name = 'PA_OVN'
+    OR screen-name = 'PA_PTE'.
+      screen-input = '0'.
+      MODIFY SCREEN.
+    ENDIF.
+
     IF pa_new = abap_true.
 
       IF screen-group1 = 'G1'.
@@ -1255,7 +1341,10 @@ AT SELECTION-SCREEN OUTPUT.
       OR screen-group1 = 'G13'
       OR screen-group1 = 'G3'
       OR screen-group1 = 'G14'
-      OR screen-group1 = 'G15'.
+      OR screen-group1 = 'G15'
+      OR screen-group1 = 'G20'
+      OR screen-group1 = 'G21'.
+
         screen-active = '0'.
       ENDIF.
 
@@ -1278,13 +1367,27 @@ AT SELECTION-SCREEN OUTPUT.
       MODIFY SCREEN.
     ENDIF.
 
+    IF pa_scttb = abap_true.
+      IF screen-group1 = 'G13'.
+        screen-active = '1'.
+      ELSEIF screen-group1 = 'G16' OR
+      screen-group1 = 'G12' OR
+      screen-group1 = 'G20'.
+        screen-active = '0'.
+      ENDIF.
+
+      MODIFY SCREEN.
+
+    ENDIF.
+
     IF pa_stabl = abap_true.
 
       IF screen-group1 = 'G12'.
         screen-active = '1'.
       ELSEIF screen-group1 = 'G13'
       OR screen-group1 = 'G16'
-      OR screen-group1 = 'G17'.
+      OR screen-group1 = 'G17'
+      OR screen-group1 = 'G20'.
         screen-active = '0'.
       ENDIF.
 
@@ -1308,7 +1411,8 @@ AT SELECTION-SCREEN OUTPUT.
         screen-active = '1'.
       ELSEIF screen-group1 = 'G15'
       OR screen-group1 = 'G18'
-            OR screen-group1 = 'G19'.
+      OR screen-group1 = 'G19'
+      OR screen-group1 = 'G21'.
         screen-active = '0'.
       ENDIF.
 
@@ -1328,11 +1432,27 @@ AT SELECTION-SCREEN OUTPUT.
 
     ENDIF.
 
+    IF pa_rcttb = abap_true.
+
+      IF screen-group1 = 'G15'.
+        screen-active = '1'.
+      ELSEIF screen-group1 = 'G14' OR
+      screen-group1 = 'G18'
+       OR screen-group1 = 'G21'.
+        screen-active = '0'.
+      ENDIF.
+
+      MODIFY SCREEN.
+
+    ENDIF.
+
     IF pa_lsdat = abap_true.
       IF screen-group1 = 'G16'.
         screen-active = '1'.
       ELSEIF screen-group1 = 'G13' OR
-      screen-group1 = 'G12'.
+      screen-group1 = 'G12'
+      OR screen-group1 = 'G20'
+      OR screen-group1 = 'G21'.
         screen-active = '0'.
       ENDIF.
 
@@ -1344,7 +1464,8 @@ AT SELECTION-SCREEN OUTPUT.
       IF screen-group1 = 'G18'.
         screen-active = '1'.
       ELSEIF screen-group1 = 'G14' OR
-      screen-group1 = 'G15'.
+      screen-group1 = 'G15'
+      OR screen-group1 = 'G21'.
         screen-active = '0'.
       ENDIF.
 
@@ -1366,6 +1487,11 @@ END-OF-SELECTION.
 
   IF pa_new = abap_true.
 
+    IF lr_data_src IS NOT BOUND OR lr_data_res IS NOT BOUND.
+      MESSAGE 'Please choose both - source and target data' TYPE 'I' DISPLAY LIKE 'E'.
+      EXIT.
+    ENDIF.
+
     lobj_trfn_tester->test_new_scenario(
         iv_source_ddic_table = CONV #( pa_stabn )
         iv_result_ddic_table = CONV #( pa_rtabn )
@@ -1379,6 +1505,6 @@ END-OF-SELECTION.
 
 ****************************************************
 INTERFACE lif_abapmerge_marker.
-* abapmerge 0.14.3 - 2021-10-08T19:52:13.854Z
+* abapmerge 0.14.3 - 2021-11-20T15:00:07.943Z
 ENDINTERFACE.
 ****************************************************
