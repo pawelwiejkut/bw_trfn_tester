@@ -17,15 +17,13 @@ PA_LSDAT	Load own test data
 PA_NEW	Test new solution
 PA_OVN	Compare solutions
 PA_PTE	Performance test
+PA_RCTTB	Use table from TRFN result
 PA_ROWND	Create own result data
 PA_RTABL	DDIC Result table
 PA_RTABN	DDIC Result table
 PA_RTEMP	Template table
 PA_RVNAM	Result table variant name
+PA_SCTTB	Use table from TRFN source
 PA_SOWND	Create own test data
 PA_STABL	DDIC Source table
 PA_STABN	Table name
-PA_STEMP	Template table
-PA_STRFN	Source object of TRFN
-PA_SVNAM	Source table variant name
-PA_TTRFN	Target object of TRFN
