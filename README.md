@@ -25,4 +25,4 @@ You have 2 ways:
 
 ## How to contribute ?
 
-Please check [this link](https://pawelwiejkut.net/how-to-contribute-abap-projects-on-github/) or contribution page.
+Please check [this link](https://pawelwiejkut.net/how-to-contribute-abap-projects-on-github/) or contribution page. 
