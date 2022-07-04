@@ -1,5 +1,5 @@
 # BW Transformation Tester - BETA
-[![CI](https://github.com/pawelwiejkut/bw_trfn_tester/workflows/CI/badge.svg)](https://github.com/pawelwiejkut/bw_trfn_tester/actions)<br />
+
 Please click on gif for better quality.
 
 [![2021-04-10-17.23.40.md.gif](https://media.giphy.com/media/aEAizboJo9Kp6Cb3et/giphy.gif)](https://gifyu.com/image/rbV0)
